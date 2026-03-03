@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew assembleDebug)",
+      "Bash(git add -A)",
+      "Bash(git commit:*)",
+      "Bash(git init)",
+      "Bash(git config user.email \"chrisgrebi@dotbox.app\")",
+      "Bash(git config user.name \"Chris Grebi\")"
+    ]
+  }
+}
