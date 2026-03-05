@@ -201,7 +201,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "v1.2.0",
+                            text = "v1.1.1",
                             style = MaterialTheme.typography.bodyMedium,
                             fontFamily = JetBrainsMono,
                             color = MaterialTheme.colorScheme.tertiary

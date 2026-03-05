@@ -10,7 +10,8 @@
       "Bash(grep -l \"ClipboardManager\\\\|clipboardManager\\\\|clipboard\" \"/Users/chrisgrebi/Documents/Claude/Vibe Coding/OmniTools/app/src/main/java/com/dotbox/app/ui/screens/tools/\"*.kt)",
       "Bash('/Users/chrisgrebi/Documents/Claude/Vibe Coding/OmniTools/app/src/main/java/com/dotbox/app/ui/screens/tools/ScreenInfoScreen.kt':*)",
       "Bash(\"/Users/chrisgrebi/Documents/Claude/Vibe Coding/OmniTools/app/src/main/java/com/dotbox/app/ui/screens/tools/LightMeterScreen.kt\":*)",
-      "Bash('/Users/chrisgrebi/Documents/Claude/Vibe Coding/OmniTools/app/src/main/java/com/dotbox/app/ui/screens/tools/FrequencyGeneratorScreen.kt':*)"
+      "Bash('/Users/chrisgrebi/Documents/Claude/Vibe Coding/OmniTools/app/src/main/java/com/dotbox/app/ui/screens/tools/FrequencyGeneratorScreen.kt':*)",
+      "Bash(git tag -d v1.2.0)"
     ]
   }
 }
