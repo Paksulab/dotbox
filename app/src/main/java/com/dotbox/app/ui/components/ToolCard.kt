@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -54,11 +55,11 @@ fun ToolCard(
             .aspectRatio(1f),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = tool.category.accentColor.copy(alpha = 0.08f),
         ),
         border = BorderStroke(
             width = 1.dp,
-            color = tool.category.accentColor.copy(alpha = 0.15f),
+            color = tool.category.accentColor.copy(alpha = 0.2f),
         ),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -84,13 +85,13 @@ fun ToolCard(
                     .fillMaxSize()
                     .padding(horizontal = 12.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+                verticalArrangement = Arrangement.Center,
             ) {
                 Icon(
                     imageVector = tool.icon,
                     contentDescription = tool.toolName,
                     modifier = Modifier.size(32.dp),
-                    tint = tool.category.accentColor,
+                    tint = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))

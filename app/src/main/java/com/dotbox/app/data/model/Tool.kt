@@ -25,11 +25,21 @@ import androidx.compose.material.icons.outlined.Percent
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Accessibility
+import androidx.compose.material.icons.outlined.AvTimer
+import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.ChildCare
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Exposure
+import androidx.compose.material.icons.outlined.GraphicEq
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.Kitchen
+import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.QrCode2
+import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material.icons.outlined.QrCodeScanner
-import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.SwapHoriz
@@ -119,6 +129,41 @@ enum class ToolId(
         category = ToolCategory.UTILITIES,
         route = "tool_battery_info",
     ),
+    HABIT_TRACKER(
+        toolName = "Habit Tracker",
+        description = "Daily check-in grid",
+        icon = Icons.Outlined.GridView,
+        category = ToolCategory.UTILITIES,
+        route = "tool_habit_tracker",
+    ),
+    POMODORO_TIMER(
+        toolName = "Pomodoro",
+        description = "Focus timer 25/5 cycles",
+        icon = Icons.Outlined.AvTimer,
+        category = ToolCategory.UTILITIES,
+        route = "tool_pomodoro",
+    ),
+    COUNTER(
+        toolName = "Counter",
+        description = "Tap to count & tally",
+        icon = Icons.Outlined.Exposure,
+        category = ToolCategory.UTILITIES,
+        route = "tool_counter",
+    ),
+    PASSWORD_STRENGTH(
+        toolName = "Password Check",
+        description = "Strength & entropy",
+        icon = Icons.Outlined.Lock,
+        category = ToolCategory.UTILITIES,
+        route = "tool_password_strength",
+    ),
+    SCREEN_INFO(
+        toolName = "Screen Info",
+        description = "DPI, size & refresh rate",
+        icon = Icons.Outlined.Smartphone,
+        category = ToolCategory.UTILITIES,
+        route = "tool_screen_info",
+    ),
 
     // ── Calculators ──
     CALCULATOR(
@@ -131,7 +176,7 @@ enum class ToolId(
     TIP_CALCULATOR(
         toolName = "Tip Calculator",
         description = "Split bills & tips",
-        icon = Icons.Outlined.ReceiptLong,
+        icon = Icons.AutoMirrored.Outlined.ReceiptLong,
         category = ToolCategory.CALCULATORS,
         route = "tool_tip_calculator",
     ),
@@ -207,6 +252,13 @@ enum class ToolId(
         category = ToolCategory.MEASUREMENT,
         route = "tool_magnifier",
     ),
+    LIGHT_METER(
+        toolName = "Light Meter",
+        description = "Ambient lux sensor",
+        icon = Icons.Outlined.LightMode,
+        category = ToolCategory.MEASUREMENT,
+        route = "tool_light_meter",
+    ),
 
     // ── Converters ──
     UNIT_CONVERTER(
@@ -237,6 +289,27 @@ enum class ToolId(
         category = ToolCategory.CONVERTERS,
         route = "tool_time_zones",
     ),
+    COOKING_CONVERTER(
+        toolName = "Cooking",
+        description = "Cups, tbsp, grams & more",
+        icon = Icons.Outlined.Kitchen,
+        category = ToolCategory.CONVERTERS,
+        route = "tool_cooking",
+    ),
+    CLOTHING_SIZE(
+        toolName = "Clothing Size",
+        description = "US, EU & UK sizes",
+        icon = Icons.Outlined.Checkroom,
+        category = ToolCategory.CONVERTERS,
+        route = "tool_clothing_size",
+    ),
+    MORSE_CODE(
+        toolName = "Morse Code",
+        description = "Text ↔ morse translator",
+        icon = Icons.Outlined.Code,
+        category = ToolCategory.CONVERTERS,
+        route = "tool_morse_code",
+    ),
 
     // ── Generators ──
     QR_GENERATOR(
@@ -259,6 +332,13 @@ enum class ToolId(
         icon = Icons.Outlined.TextFields,
         category = ToolCategory.GENERATORS,
         route = "tool_text_tools",
+    ),
+    FREQUENCY_GENERATOR(
+        toolName = "Tone Generator",
+        description = "Audio frequency 20Hz–20kHz",
+        icon = Icons.Outlined.GraphicEq,
+        category = ToolCategory.GENERATORS,
+        route = "tool_frequency",
     ),
 
     // ── Scanners ──

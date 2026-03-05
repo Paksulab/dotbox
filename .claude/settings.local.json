@@ -6,7 +6,11 @@
       "Bash(git commit:*)",
       "Bash(git init)",
       "Bash(git config user.email \"chrisgrebi@dotbox.app\")",
-      "Bash(git config user.name \"Chris Grebi\")"
+      "Bash(git config user.name \"Chris Grebi\")",
+      "Bash(grep -l \"ClipboardManager\\\\|clipboardManager\\\\|clipboard\" \"/Users/chrisgrebi/Documents/Claude/Vibe Coding/OmniTools/app/src/main/java/com/dotbox/app/ui/screens/tools/\"*.kt)",
+      "Bash('/Users/chrisgrebi/Documents/Claude/Vibe Coding/OmniTools/app/src/main/java/com/dotbox/app/ui/screens/tools/ScreenInfoScreen.kt':*)",
+      "Bash(\"/Users/chrisgrebi/Documents/Claude/Vibe Coding/OmniTools/app/src/main/java/com/dotbox/app/ui/screens/tools/LightMeterScreen.kt\":*)",
+      "Bash('/Users/chrisgrebi/Documents/Claude/Vibe Coding/OmniTools/app/src/main/java/com/dotbox/app/ui/screens/tools/FrequencyGeneratorScreen.kt':*)"
     ]
   }
 }

@@ -50,6 +50,17 @@ import com.dotbox.app.ui.screens.tools.DoseCalculatorScreen
 import com.dotbox.app.ui.screens.tools.IVDripRateScreen
 import com.dotbox.app.ui.screens.tools.WaterIntakeScreen
 import com.dotbox.app.ui.screens.tools.IdealBodyWeightScreen
+import com.dotbox.app.ui.screens.tools.HabitTrackerScreen
+import com.dotbox.app.ui.screens.tools.PomodoroTimerScreen
+import com.dotbox.app.ui.screens.tools.CounterScreen
+import com.dotbox.app.ui.screens.tools.PasswordStrengthScreen
+import com.dotbox.app.ui.screens.tools.ScreenInfoScreen
+import com.dotbox.app.ui.screens.tools.LightMeterScreen
+import com.dotbox.app.ui.screens.tools.CookingConverterScreen
+import com.dotbox.app.ui.screens.tools.ClothingSizeScreen
+import com.dotbox.app.ui.screens.tools.MorseCodeScreen
+import com.dotbox.app.ui.screens.tools.FrequencyGeneratorScreen
+import com.dotbox.app.ui.screens.settings.SettingsScreen
 
 @Composable
 fun DotBoxNavGraph(
@@ -92,7 +103,12 @@ fun DotBoxNavGraph(
             HomeScreen(
                 repository = repository,
                 onToolClick = { tool -> navController.navigate(tool.route) },
+                onSettingsClick = { navController.navigate(Screen.Settings.route) },
             )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
 
         // ── Utilities ──
@@ -116,6 +132,21 @@ fun DotBoxNavGraph(
         }
         composable(ToolId.BATTERY_INFO.route) {
             BatteryInfoScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.HABIT_TRACKER.route) {
+            HabitTrackerScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.POMODORO_TIMER.route) {
+            PomodoroTimerScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.COUNTER.route) {
+            CounterScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.PASSWORD_STRENGTH.route) {
+            PasswordStrengthScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.SCREEN_INFO.route) {
+            ScreenInfoScreen(onBack = { navController.popBackStack() })
         }
 
         // ── Calculators ──
@@ -157,6 +188,9 @@ fun DotBoxNavGraph(
         composable(ToolId.MAGNIFIER.route) {
             MagnifierScreen(onBack = { navController.popBackStack() })
         }
+        composable(ToolId.LIGHT_METER.route) {
+            LightMeterScreen(onBack = { navController.popBackStack() })
+        }
 
         // ── Converters ──
         composable(ToolId.UNIT_CONVERTER.route) {
@@ -171,6 +205,15 @@ fun DotBoxNavGraph(
         composable(ToolId.TIME_ZONE_CONVERTER.route) {
             TimeZoneConverterScreen(onBack = { navController.popBackStack() })
         }
+        composable(ToolId.COOKING_CONVERTER.route) {
+            CookingConverterScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.CLOTHING_SIZE.route) {
+            ClothingSizeScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.MORSE_CODE.route) {
+            MorseCodeScreen(onBack = { navController.popBackStack() })
+        }
 
         // ── Generators ──
         composable(ToolId.QR_GENERATOR.route) {
@@ -181,6 +224,9 @@ fun DotBoxNavGraph(
         }
         composable(ToolId.TEXT_TOOLS.route) {
             TextToolsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.FREQUENCY_GENERATOR.route) {
+            FrequencyGeneratorScreen(onBack = { navController.popBackStack() })
         }
 
         // ── Scanners ──
