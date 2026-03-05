@@ -1,32 +1,52 @@
 package com.dotbox.app.data.model
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.AttachMoney
+import androidx.compose.material.icons.outlined.BatteryStd
 import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.material.icons.outlined.ColorLens
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.FlashlightOn
+import androidx.compose.material.icons.outlined.HourglassEmpty
+import androidx.compose.material.icons.outlined.LocalBar
+import androidx.compose.material.icons.outlined.LocalDrink
+import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.outlined.Opacity
+import androidx.compose.material.icons.outlined.Percent
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Accessibility
+import androidx.compose.material.icons.outlined.ChildCare
+import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.dotbox.app.ui.theme.AccentCalculator
 import com.dotbox.app.ui.theme.AccentConvert
 import com.dotbox.app.ui.theme.AccentGenerate
 import com.dotbox.app.ui.theme.AccentMeasure
 import com.dotbox.app.ui.theme.AccentScan
+import com.dotbox.app.ui.theme.AccentMedical
 import com.dotbox.app.ui.theme.AccentUtility
 
 enum class ToolCategory(
@@ -34,10 +54,12 @@ enum class ToolCategory(
     val accentColor: Color,
 ) {
     UTILITIES("Utilities", AccentUtility),
+    CALCULATORS("Calculators", AccentCalculator),
     MEASUREMENT("Measurement", AccentMeasure),
     CONVERTERS("Converters", AccentConvert),
     GENERATORS("Generators", AccentGenerate),
     SCANNERS("Scanners", AccentScan),
+    MEDICAL("Medical", AccentMedical),
 }
 
 enum class ToolId(
@@ -47,13 +69,7 @@ enum class ToolId(
     val category: ToolCategory,
     val route: String,
 ) {
-    CALCULATOR(
-        toolName = "Calculator",
-        description = "Scientific calculator",
-        icon = Icons.Outlined.Calculate,
-        category = ToolCategory.UTILITIES,
-        route = "tool_calculator",
-    ),
+    // ── Utilities ──
     FLASHLIGHT(
         toolName = "Flashlight",
         description = "Torch with strobe & SOS",
@@ -68,13 +84,6 @@ enum class ToolId(
         category = ToolCategory.UTILITIES,
         route = "tool_stopwatch",
     ),
-    NOTES(
-        toolName = "Notes",
-        description = "Quick scratch pad",
-        icon = Icons.Outlined.EditNote,
-        category = ToolCategory.UTILITIES,
-        route = "tool_notes",
-    ),
     RANDOM_GENERATOR(
         toolName = "Random Generator",
         description = "Dice, coins, passwords & more",
@@ -82,6 +91,80 @@ enum class ToolId(
         category = ToolCategory.UTILITIES,
         route = "tool_random_generator",
     ),
+    COUNTDOWN_TIMER(
+        toolName = "Countdown",
+        description = "Timer to a target date",
+        icon = Icons.Outlined.HourglassEmpty,
+        category = ToolCategory.UTILITIES,
+        route = "tool_countdown",
+    ),
+    CLIPBOARD_MANAGER(
+        toolName = "Clipboard",
+        description = "Clipboard history & pins",
+        icon = Icons.Outlined.ContentPaste,
+        category = ToolCategory.UTILITIES,
+        route = "tool_clipboard",
+    ),
+    NETWORK_INFO(
+        toolName = "Network Info",
+        description = "IP, WiFi & connectivity",
+        icon = Icons.Outlined.Wifi,
+        category = ToolCategory.UTILITIES,
+        route = "tool_network_info",
+    ),
+    BATTERY_INFO(
+        toolName = "Battery Info",
+        description = "Health, temp & voltage",
+        icon = Icons.Outlined.BatteryStd,
+        category = ToolCategory.UTILITIES,
+        route = "tool_battery_info",
+    ),
+
+    // ── Calculators ──
+    CALCULATOR(
+        toolName = "Calculator",
+        description = "Scientific calculator",
+        icon = Icons.Outlined.Calculate,
+        category = ToolCategory.CALCULATORS,
+        route = "tool_calculator",
+    ),
+    TIP_CALCULATOR(
+        toolName = "Tip Calculator",
+        description = "Split bills & tips",
+        icon = Icons.Outlined.ReceiptLong,
+        category = ToolCategory.CALCULATORS,
+        route = "tool_tip_calculator",
+    ),
+    PERCENTAGE_CALCULATOR(
+        toolName = "Percentage",
+        description = "% of, change & difference",
+        icon = Icons.Outlined.Percent,
+        category = ToolCategory.CALCULATORS,
+        route = "tool_percentage",
+    ),
+    DATE_CALCULATOR(
+        toolName = "Date Calculator",
+        description = "Age, days between dates",
+        icon = Icons.Outlined.CalendarMonth,
+        category = ToolCategory.CALCULATORS,
+        route = "tool_date_calculator",
+    ),
+    LOAN_CALCULATOR(
+        toolName = "Loan Calculator",
+        description = "Monthly payments & interest",
+        icon = Icons.Outlined.AccountBalance,
+        category = ToolCategory.CALCULATORS,
+        route = "tool_loan_calculator",
+    ),
+    ASPECT_RATIO_CALCULATOR(
+        toolName = "Aspect Ratio",
+        description = "Width, height & diagonals",
+        icon = Icons.Outlined.AspectRatio,
+        category = ToolCategory.CALCULATORS,
+        route = "tool_aspect_ratio",
+    ),
+
+    // ── Measurement ──
     COMPASS(
         toolName = "Compass",
         description = "Digital compass",
@@ -124,6 +207,8 @@ enum class ToolId(
         category = ToolCategory.MEASUREMENT,
         route = "tool_magnifier",
     ),
+
+    // ── Converters ──
     UNIT_CONVERTER(
         toolName = "Unit Converter",
         description = "Length, weight, temp & more",
@@ -152,6 +237,8 @@ enum class ToolId(
         category = ToolCategory.CONVERTERS,
         route = "tool_time_zones",
     ),
+
+    // ── Generators ──
     QR_GENERATOR(
         toolName = "QR Generator",
         description = "Create QR codes",
@@ -173,6 +260,8 @@ enum class ToolId(
         category = ToolCategory.GENERATORS,
         route = "tool_text_tools",
     ),
+
+    // ── Scanners ──
     QR_SCANNER(
         toolName = "QR Scanner",
         description = "Scan barcodes & QR codes",
@@ -186,5 +275,77 @@ enum class ToolId(
         icon = Icons.Outlined.DocumentScanner,
         category = ToolCategory.SCANNERS,
         route = "tool_doc_scanner",
+    ),
+
+    // ── Medical ──
+    BMI_CALCULATOR(
+        toolName = "BMI Calculator",
+        description = "Body Mass Index",
+        icon = Icons.Outlined.FitnessCenter,
+        category = ToolCategory.MEDICAL,
+        route = "tool_bmi",
+    ),
+    BMR_CALCULATOR(
+        toolName = "BMR / TDEE",
+        description = "Metabolic rate & calories",
+        icon = Icons.Outlined.LocalFireDepartment,
+        category = ToolCategory.MEDICAL,
+        route = "tool_bmr",
+    ),
+    HEART_RATE_ZONES(
+        toolName = "Heart Rate Zones",
+        description = "Training zones by HR",
+        icon = Icons.Outlined.FavoriteBorder,
+        category = ToolCategory.MEDICAL,
+        route = "tool_heart_rate",
+    ),
+    BODY_FAT_CALCULATOR(
+        toolName = "Body Fat %",
+        description = "Navy method estimate",
+        icon = Icons.Outlined.Accessibility,
+        category = ToolCategory.MEDICAL,
+        route = "tool_body_fat",
+    ),
+    BAC_CALCULATOR(
+        toolName = "BAC Calculator",
+        description = "Blood alcohol estimate",
+        icon = Icons.Outlined.LocalBar,
+        category = ToolCategory.MEDICAL,
+        route = "tool_bac",
+    ),
+    DUE_DATE_CALCULATOR(
+        toolName = "Due Date",
+        description = "Pregnancy due date",
+        icon = Icons.Outlined.ChildCare,
+        category = ToolCategory.MEDICAL,
+        route = "tool_due_date",
+    ),
+    DOSE_CALCULATOR(
+        toolName = "Dose Calculator",
+        description = "Weight-based dosing",
+        icon = Icons.Outlined.MedicalServices,
+        category = ToolCategory.MEDICAL,
+        route = "tool_dose",
+    ),
+    IV_DRIP_RATE(
+        toolName = "IV Drip Rate",
+        description = "Drops/min & mL/hr",
+        icon = Icons.Outlined.Opacity,
+        category = ToolCategory.MEDICAL,
+        route = "tool_iv_drip",
+    ),
+    WATER_INTAKE(
+        toolName = "Water Intake",
+        description = "Daily hydration target",
+        icon = Icons.Outlined.LocalDrink,
+        category = ToolCategory.MEDICAL,
+        route = "tool_water_intake",
+    ),
+    IDEAL_BODY_WEIGHT(
+        toolName = "Ideal Weight",
+        description = "Devine, Robinson & more",
+        icon = Icons.Outlined.Person,
+        category = ToolCategory.MEDICAL,
+        route = "tool_ideal_weight",
     ),
 }

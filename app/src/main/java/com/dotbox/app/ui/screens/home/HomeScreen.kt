@@ -9,7 +9,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,8 +19,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -139,15 +141,17 @@ fun HomeScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             DotPattern()
 
-            LazyColumn(
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                // Category chips
-                item {
+                // Category chips — full width
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     AnimatedVisibility(
                         visible = !uiState.isSearchActive,
                         enter = fadeIn() + expandVertically(),
@@ -187,14 +191,13 @@ fun HomeScreen(
                 // Favorites section
                 val favoriteTools = uiState.tools.filter { it.name in uiState.favoriteIds }
                 if (favoriteTools.isNotEmpty() && !uiState.isSearchActive && uiState.selectedCategory == null) {
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "FAVORITES",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.tertiary,
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
                     }
                     items(favoriteTools, key = { "fav_${it.name}" }) { tool ->
                         ToolCard(
@@ -206,9 +209,9 @@ fun HomeScreen(
                     }
                 }
 
-                // All tools / filtered tools
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
+                // Section header — full width
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = when {
                             uiState.isSearchActive && uiState.searchQuery.isNotBlank() ->
@@ -220,9 +223,9 @@ fun HomeScreen(
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
                 }
 
+                // Tool tiles — 2 columns
                 items(uiState.tools, key = { it.name }) { tool ->
                     ToolCard(
                         tool = tool,
@@ -232,8 +235,8 @@ fun HomeScreen(
                     )
                 }
 
-                // Bottom spacing for navigation bar
-                item {
+                // Bottom spacing
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }

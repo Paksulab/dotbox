@@ -12,16 +12,23 @@ import androidx.navigation.compose.composable
 import com.dotbox.app.data.model.ToolId
 import com.dotbox.app.data.repository.ToolsRepository
 import com.dotbox.app.ui.screens.home.HomeScreen
+import com.dotbox.app.ui.screens.tools.AspectRatioCalculatorScreen
+import com.dotbox.app.ui.screens.tools.BatteryInfoScreen
 import com.dotbox.app.ui.screens.tools.CalculatorScreen
+import com.dotbox.app.ui.screens.tools.ClipboardManagerScreen
 import com.dotbox.app.ui.screens.tools.ColorPickerScreen
 import com.dotbox.app.ui.screens.tools.CompassScreen
+import com.dotbox.app.ui.screens.tools.CountdownTimerScreen
 import com.dotbox.app.ui.screens.tools.CurrencyConverterScreen
+import com.dotbox.app.ui.screens.tools.DateCalculatorScreen
 import com.dotbox.app.ui.screens.tools.DocumentScannerScreen
 import com.dotbox.app.ui.screens.tools.FlashlightScreen
 import com.dotbox.app.ui.screens.tools.LevelScreen
+import com.dotbox.app.ui.screens.tools.LoanCalculatorScreen
 import com.dotbox.app.ui.screens.tools.MagnifierScreen
-import com.dotbox.app.ui.screens.tools.NotesScreen
+import com.dotbox.app.ui.screens.tools.NetworkInfoScreen
 import com.dotbox.app.ui.screens.tools.NumberBaseConverterScreen
+import com.dotbox.app.ui.screens.tools.PercentageCalculatorScreen
 import com.dotbox.app.ui.screens.tools.QRGeneratorScreen
 import com.dotbox.app.ui.screens.tools.QRScannerScreen
 import com.dotbox.app.ui.screens.tools.RandomGeneratorScreen
@@ -31,7 +38,18 @@ import com.dotbox.app.ui.screens.tools.SpeedometerScreen
 import com.dotbox.app.ui.screens.tools.StopwatchScreen
 import com.dotbox.app.ui.screens.tools.TextToolsScreen
 import com.dotbox.app.ui.screens.tools.TimeZoneConverterScreen
+import com.dotbox.app.ui.screens.tools.TipCalculatorScreen
 import com.dotbox.app.ui.screens.tools.UnitConverterScreen
+import com.dotbox.app.ui.screens.tools.BMICalculatorScreen
+import com.dotbox.app.ui.screens.tools.BMRCalculatorScreen
+import com.dotbox.app.ui.screens.tools.HeartRateZonesScreen
+import com.dotbox.app.ui.screens.tools.BodyFatCalculatorScreen
+import com.dotbox.app.ui.screens.tools.BACCalculatorScreen
+import com.dotbox.app.ui.screens.tools.DueDateCalculatorScreen
+import com.dotbox.app.ui.screens.tools.DoseCalculatorScreen
+import com.dotbox.app.ui.screens.tools.IVDripRateScreen
+import com.dotbox.app.ui.screens.tools.WaterIntakeScreen
+import com.dotbox.app.ui.screens.tools.IdealBodyWeightScreen
 
 @Composable
 fun DotBoxNavGraph(
@@ -77,24 +95,50 @@ fun DotBoxNavGraph(
             )
         }
 
-        // Utilities
-        composable(ToolId.CALCULATOR.route) {
-            CalculatorScreen(onBack = { navController.popBackStack() })
-        }
+        // ── Utilities ──
         composable(ToolId.FLASHLIGHT.route) {
             FlashlightScreen(onBack = { navController.popBackStack() })
         }
         composable(ToolId.STOPWATCH.route) {
             StopwatchScreen(onBack = { navController.popBackStack() })
         }
-        composable(ToolId.NOTES.route) {
-            NotesScreen(onBack = { navController.popBackStack() })
-        }
         composable(ToolId.RANDOM_GENERATOR.route) {
             RandomGeneratorScreen(onBack = { navController.popBackStack() })
         }
+        composable(ToolId.COUNTDOWN_TIMER.route) {
+            CountdownTimerScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.CLIPBOARD_MANAGER.route) {
+            ClipboardManagerScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.NETWORK_INFO.route) {
+            NetworkInfoScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.BATTERY_INFO.route) {
+            BatteryInfoScreen(onBack = { navController.popBackStack() })
+        }
 
-        // Measurement
+        // ── Calculators ──
+        composable(ToolId.CALCULATOR.route) {
+            CalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.TIP_CALCULATOR.route) {
+            TipCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.PERCENTAGE_CALCULATOR.route) {
+            PercentageCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.DATE_CALCULATOR.route) {
+            DateCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.LOAN_CALCULATOR.route) {
+            LoanCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.ASPECT_RATIO_CALCULATOR.route) {
+            AspectRatioCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ── Measurement ──
         composable(ToolId.COMPASS.route) {
             CompassScreen(onBack = { navController.popBackStack() })
         }
@@ -114,7 +158,7 @@ fun DotBoxNavGraph(
             MagnifierScreen(onBack = { navController.popBackStack() })
         }
 
-        // Converters
+        // ── Converters ──
         composable(ToolId.UNIT_CONVERTER.route) {
             UnitConverterScreen(onBack = { navController.popBackStack() })
         }
@@ -128,7 +172,7 @@ fun DotBoxNavGraph(
             TimeZoneConverterScreen(onBack = { navController.popBackStack() })
         }
 
-        // Generators
+        // ── Generators ──
         composable(ToolId.QR_GENERATOR.route) {
             QRGeneratorScreen(onBack = { navController.popBackStack() })
         }
@@ -139,12 +183,44 @@ fun DotBoxNavGraph(
             TextToolsScreen(onBack = { navController.popBackStack() })
         }
 
-        // Scanners
+        // ── Scanners ──
         composable(ToolId.QR_SCANNER.route) {
             QRScannerScreen(onBack = { navController.popBackStack() })
         }
         composable(ToolId.DOCUMENT_SCANNER.route) {
             DocumentScannerScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ── Medical ──
+        composable(ToolId.BMI_CALCULATOR.route) {
+            BMICalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.BMR_CALCULATOR.route) {
+            BMRCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.HEART_RATE_ZONES.route) {
+            HeartRateZonesScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.BODY_FAT_CALCULATOR.route) {
+            BodyFatCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.BAC_CALCULATOR.route) {
+            BACCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.DUE_DATE_CALCULATOR.route) {
+            DueDateCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.DOSE_CALCULATOR.route) {
+            DoseCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.IV_DRIP_RATE.route) {
+            IVDripRateScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.WATER_INTAKE.route) {
+            WaterIntakeScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.IDEAL_BODY_WEIGHT.route) {
+            IdealBodyWeightScreen(onBack = { navController.popBackStack() })
         }
     }
 }

@@ -1,8 +1,15 @@
 package com.dotbox.app.ui.screens.tools
 
 import android.app.Activity
+import android.content.ContentValues
+import android.content.Context
 import android.graphics.BitmapFactory
+import android.graphics.pdf.PdfDocument
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,12 +26,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -92,6 +103,101 @@ fun DocumentScannerScreen(onBack: () -> Unit) {
             .addOnFailureListener { e ->
                 errorMessage = "Scanner unavailable: ${e.localizedMessage}"
             }
+    }
+
+    fun saveToGallery() {
+        var saved = 0
+        scannedPages.forEachIndexed { index, uri ->
+            try {
+                val bitmap = context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream)
+                } ?: return@forEachIndexed
+
+                val filename = "DotBox_Scan_${System.currentTimeMillis()}_${index + 1}.jpg"
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/DotBox")
+                        put(MediaStore.Images.Media.IS_PENDING, 1)
+                    }
+                }
+
+                val imageUri = context.contentResolver.insert(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    contentValues,
+                )
+
+                imageUri?.let { outputUri ->
+                    context.contentResolver.openOutputStream(outputUri)?.use { out ->
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        contentValues.clear()
+                        contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                        context.contentResolver.update(outputUri, contentValues, null, null)
+                    }
+                    saved++
+                }
+            } catch (e: Exception) {
+                // Skip failed pages
+            }
+        }
+        Toast.makeText(context, "$saved image${if (saved != 1) "s" else ""} saved to gallery", Toast.LENGTH_SHORT).show()
+    }
+
+    fun saveAsPdf() {
+        try {
+            val pdfDocument = PdfDocument()
+            scannedPages.forEachIndexed { index, uri ->
+                val bitmap = context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream)
+                } ?: return@forEachIndexed
+
+                val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, index + 1).create()
+                val page = pdfDocument.startPage(pageInfo)
+                page.canvas.drawBitmap(bitmap, 0f, 0f, null)
+                pdfDocument.finishPage(page)
+            }
+
+            val filename = "DotBox_Scan_${System.currentTimeMillis()}.pdf"
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/DotBox")
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                }
+            }
+
+            val pdfUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.contentResolver.insert(
+                    MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+                    contentValues,
+                )
+            } else {
+                context.contentResolver.insert(
+                    MediaStore.Files.getContentUri("external"),
+                    contentValues,
+                )
+            }
+
+            pdfUri?.let { outputUri ->
+                context.contentResolver.openOutputStream(outputUri)?.use { out ->
+                    pdfDocument.writeTo(out)
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    contentValues.clear()
+                    contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                    context.contentResolver.update(outputUri, contentValues, null, null)
+                }
+                Toast.makeText(context, "PDF saved to Documents/DotBox", Toast.LENGTH_SHORT).show()
+            }
+
+            pdfDocument.close()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Failed to save PDF: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     ToolScreenScaffold(title = "Doc Scanner", onBack = onBack) { paddingValues ->
@@ -184,8 +290,45 @@ fun DocumentScannerScreen(onBack: () -> Unit) {
                         }
                     }
 
+                    // Save buttons
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Button(
+                                onClick = { saveToGallery() },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary,
+                                ),
+                            ) {
+                                Icon(Icons.Outlined.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Save to Gallery", style = MaterialTheme.typography.labelLarge)
+                            }
+                            Button(
+                                onClick = { saveAsPdf() },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary,
+                                ),
+                            ) {
+                                Icon(Icons.Outlined.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Save as PDF", style = MaterialTheme.typography.labelLarge)
+                            }
+                        }
+                    }
+
+                    item {
                         Button(
                             onClick = {
                                 scannedPages = emptyList()
