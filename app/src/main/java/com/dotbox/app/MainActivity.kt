@@ -1,6 +1,7 @@
 package com.dotbox.app
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,9 +10,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.rememberNavController
 import com.dotbox.app.ui.navigation.DotBoxNavGraph
 import com.dotbox.app.ui.theme.DotBoxTheme
@@ -31,16 +29,15 @@ class MainActivity : ComponentActivity() {
                 mutableStateOf(prefs.getString("theme_mode", "dark") ?: "dark")
             }
 
-            // Re-read when returning from Settings
-            val lifecycleOwner = LocalLifecycleOwner.current
-            DisposableEffect(lifecycleOwner) {
-                val observer = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_RESUME) {
-                        themeMode.value = prefs.getString("theme_mode", "dark") ?: "dark"
+            // React to SharedPreferences changes (fires immediately when Settings writes)
+            DisposableEffect(prefs) {
+                val listener = SharedPreferences.OnSharedPreferenceChangeListener { sp, key ->
+                    if (key == "theme_mode") {
+                        themeMode.value = sp.getString("theme_mode", "dark") ?: "dark"
                     }
                 }
-                lifecycleOwner.lifecycle.addObserver(observer)
-                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+                prefs.registerOnSharedPreferenceChangeListener(listener)
+                onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
             }
 
             val isDark = when (themeMode.value) {
