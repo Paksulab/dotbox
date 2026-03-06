@@ -10,8 +10,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -35,8 +32,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
@@ -75,7 +70,7 @@ import com.dotbox.app.ui.theme.JetBrainsMono
 
 private const val PREFS_NAME = "dotbox_settings"
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     repository: ToolsRepository,
@@ -290,45 +285,29 @@ fun HomeScreen(
                             }
                         }
                         itemsIndexed(favoriteTools, key = { _, tool -> "fav_${tool.name}" }) { index, tool ->
-                            Box(
-                                modifier = Modifier
-                                    .graphicsLayer {
-                                        if (uiState.isEditMode) {
-                                            // Offset wiggle slightly per item to avoid sync
-                                            rotationZ = wiggleAngle * if (index % 2 == 0) 1f else -1f
-                                        }
+                            ToolCard(
+                                tool = tool,
+                                isFavorite = true,
+                                onClick = {
+                                    if (!uiState.isEditMode) onToolClick(tool)
+                                },
+                                onFavoriteToggle = { viewModel.toggleFavorite(tool) },
+                                modifier = Modifier.graphicsLayer {
+                                    if (uiState.isEditMode) {
+                                        rotationZ = wiggleAngle * if (index % 2 == 0) 1f else -1f
                                     }
-                                    .combinedClickable(
-                                        onClick = {
-                                            if (!uiState.isEditMode) onToolClick(tool)
-                                        },
-                                        onLongClick = {
-                                            if (!uiState.isEditMode) viewModel.toggleEditMode()
-                                        },
-                                    ),
-                            ) {
-                                ToolCard(
-                                    tool = tool,
-                                    isFavorite = true,
-                                    onClick = {
-                                        if (!uiState.isEditMode) onToolClick(tool)
-                                    },
-                                    onFavoriteToggle = {
-                                        if (uiState.isEditMode) {
-                                            viewModel.toggleFavorite(tool)
-                                        } else {
-                                            viewModel.toggleFavorite(tool)
-                                        }
-                                    },
-                                    isEditMode = uiState.isEditMode,
-                                    onMoveUp = if (uiState.isEditMode && index > 0) {
-                                        { viewModel.reorderFavorites(index, index - 1) }
-                                    } else null,
-                                    onMoveDown = if (uiState.isEditMode && index < favoriteTools.size - 1) {
-                                        { viewModel.reorderFavorites(index, index + 1) }
-                                    } else null,
-                                )
-                            }
+                                },
+                                isEditMode = uiState.isEditMode,
+                                onLongClick = {
+                                    if (!uiState.isEditMode) viewModel.toggleEditMode()
+                                },
+                                onMoveUp = if (uiState.isEditMode && index > 0) {
+                                    { viewModel.reorderFavorites(index, index - 1) }
+                                } else null,
+                                onMoveDown = if (uiState.isEditMode && index < favoriteTools.size - 1) {
+                                    { viewModel.reorderFavorites(index, index + 1) }
+                                } else null,
+                            )
                         }
                     }
 

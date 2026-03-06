@@ -27,7 +27,6 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -69,24 +68,12 @@ fun TipCalculatorScreen(onBack: () -> Unit) {
     }
 
     val bill = billAmount.toDoubleOrNull() ?: 0.0
-    val tipAmount by remember(bill, tipPercent) {
-        derivedStateOf { bill * tipPercent / 100.0 }
-    }
-    val rawTotal by remember(bill, tipAmount) {
-        derivedStateOf { bill + tipAmount }
-    }
-    val total by remember(rawTotal, roundUp) {
-        derivedStateOf { if (roundUp && rawTotal > 0) ceil(rawTotal) else rawTotal }
-    }
-    val effectiveTip by remember(total, bill) {
-        derivedStateOf { total - bill }
-    }
-    val perPerson by remember(total, splitCount) {
-        derivedStateOf { if (splitCount > 0) total / splitCount else total }
-    }
-    val tipPerPerson by remember(effectiveTip, splitCount) {
-        derivedStateOf { if (splitCount > 0) effectiveTip / splitCount else effectiveTip }
-    }
+    val tipAmount = bill * tipPercent / 100.0
+    val rawTotal = bill + tipAmount
+    val total = if (roundUp && rawTotal > 0) ceil(rawTotal) else rawTotal
+    val effectiveTip = total - bill
+    val perPerson = if (splitCount > 0) total / splitCount else total
+    val tipPerPerson = if (splitCount > 0) effectiveTip / splitCount else effectiveTip
 
     val quickTips = listOf(10, 15, 18, 20, 25)
 
