@@ -26,6 +26,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import androidx.compose.ui.graphics.Color
 import com.dotbox.app.MainActivity
 import com.dotbox.app.data.model.ToolId
 
@@ -58,7 +59,7 @@ private fun WidgetContent(favorites: List<ToolId>) {
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(20.dp)
-            .background(day = android.graphics.Color.parseColor("#1A1A1A"), night = android.graphics.Color.parseColor("#1A1A1A"))
+            .background(Color(0xFF1A1A1A))
             .padding(12.dp)
             .clickable(actionStartActivity<MainActivity>()),
         verticalAlignment = Alignment.Top,
@@ -72,20 +73,14 @@ private fun WidgetContent(favorites: List<ToolId>) {
             Text(
                 text = "dot",
                 style = TextStyle(
-                    color = ColorProvider(
-                        day = android.graphics.Color.parseColor("#808080"),
-                        night = android.graphics.Color.parseColor("#808080"),
-                    ),
+                    color = ColorProvider(Color(0xFF808080)),
                     fontSize = 14.sp,
                 ),
             )
             Text(
                 text = "Box",
                 style = TextStyle(
-                    color = ColorProvider(
-                        day = android.graphics.Color.WHITE,
-                        night = android.graphics.Color.WHITE,
-                    ),
+                    color = ColorProvider(Color.White),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                 ),
@@ -99,10 +94,7 @@ private fun WidgetContent(favorites: List<ToolId>) {
             Text(
                 text = "Add favourites to see them here",
                 style = TextStyle(
-                    color = ColorProvider(
-                        day = android.graphics.Color.parseColor("#808080"),
-                        night = android.graphics.Color.parseColor("#808080"),
-                    ),
+                    color = ColorProvider(Color(0xFF808080)),
                     fontSize = 12.sp,
                 ),
             )
@@ -119,10 +111,7 @@ private fun WidgetContent(favorites: List<ToolId>) {
                             modifier = GlanceModifier
                                 .defaultWeight()
                                 .cornerRadius(12.dp)
-                                .background(
-                                    day = android.graphics.Color.parseColor("#2A2A2A"),
-                                    night = android.graphics.Color.parseColor("#2A2A2A"),
-                                )
+                                .background(Color(0xFF2A2A2A))
                                 .padding(8.dp)
                                 .clickable(actionStartActivity<MainActivity>()),
                             verticalAlignment = Alignment.CenterVertically,
@@ -131,10 +120,7 @@ private fun WidgetContent(favorites: List<ToolId>) {
                             Text(
                                 text = tool.toolName,
                                 style = TextStyle(
-                                    color = ColorProvider(
-                                        day = android.graphics.Color.WHITE,
-                                        night = android.graphics.Color.WHITE,
-                                    ),
+                                    color = ColorProvider(Color.White),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
                                 ),
