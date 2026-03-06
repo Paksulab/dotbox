@@ -1,10 +1,17 @@
 package com.dotbox.app.ui.screens.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,20 +20,27 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -46,6 +60,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -60,7 +75,7 @@ import com.dotbox.app.ui.theme.JetBrainsMono
 
 private const val PREFS_NAME = "dotbox_settings"
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     repository: ToolsRepository,
@@ -72,6 +87,18 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val categories = remember { ToolCategory.entries }
     val context = LocalContext.current
+
+    // Wiggle animation for edit mode
+    val infiniteTransition = rememberInfiniteTransition(label = "wiggle")
+    val wiggleAngle by infiniteTransition.animateFloat(
+        initialValue = -1.5f,
+        targetValue = 1.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 150),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "wiggleRotation",
+    )
 
     // Read grid columns preference
     val gridCells = remember {
@@ -124,6 +151,14 @@ fun HomeScreen(
                                 color = MaterialTheme.colorScheme.onBackground,
                             ),
                         )
+                    } else if (uiState.isEditMode) {
+                        Text(
+                            text = "Edit Favourites",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                            ),
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
                     } else {
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
@@ -145,22 +180,35 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            viewModel.onSearchActiveChanged(!uiState.isSearchActive)
-                        },
-                    ) {
-                        Icon(
-                            imageVector = if (uiState.isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                            contentDescription = if (uiState.isSearchActive) "Close search" else "Search",
-                        )
-                    }
-                    if (!uiState.isSearchActive) {
-                        IconButton(onClick = onSettingsClick) {
+                    if (uiState.isEditMode) {
+                        Button(
+                            onClick = { viewModel.exitEditMode() },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiary,
+                                contentColor = MaterialTheme.colorScheme.onTertiary,
+                            ),
+                        ) {
+                            Text("Done")
+                        }
+                    } else {
+                        IconButton(
+                            onClick = {
+                                viewModel.onSearchActiveChanged(!uiState.isSearchActive)
+                            },
+                        ) {
                             Icon(
-                                imageVector = Icons.Outlined.Settings,
-                                contentDescription = "Settings",
+                                imageVector = if (uiState.isSearchActive) Icons.Default.Close else Icons.Default.Search,
+                                contentDescription = if (uiState.isSearchActive) "Close search" else "Search",
                             )
+                        }
+                        if (!uiState.isSearchActive) {
+                            IconButton(onClick = onSettingsClick) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Settings,
+                                    contentDescription = "Settings",
+                                )
+                            }
                         }
                     }
                 },
@@ -183,7 +231,7 @@ fun HomeScreen(
             ) {
                 // ── Pinned category chips ────────────────────────────
                 AnimatedVisibility(
-                    visible = !uiState.isSearchActive,
+                    visible = !uiState.isSearchActive && !uiState.isEditMode,
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically(),
                 ) {
@@ -226,50 +274,90 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     // Favorites section
-                    val favoriteTools = uiState.tools.filter { it.name in uiState.favoriteIds }
+                    val favoriteTools = uiState.favoriteToolsOrdered
                     if (favoriteTools.isNotEmpty() && !uiState.isSearchActive && uiState.selectedCategory == null) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = "FAVORITES",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                )
+                            }
+                        }
+                        itemsIndexed(favoriteTools, key = { _, tool -> "fav_${tool.name}" }) { index, tool ->
+                            Box(
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        if (uiState.isEditMode) {
+                                            // Offset wiggle slightly per item to avoid sync
+                                            rotationZ = wiggleAngle * if (index % 2 == 0) 1f else -1f
+                                        }
+                                    }
+                                    .combinedClickable(
+                                        onClick = {
+                                            if (!uiState.isEditMode) onToolClick(tool)
+                                        },
+                                        onLongClick = {
+                                            if (!uiState.isEditMode) viewModel.toggleEditMode()
+                                        },
+                                    ),
+                            ) {
+                                ToolCard(
+                                    tool = tool,
+                                    isFavorite = true,
+                                    onClick = {
+                                        if (!uiState.isEditMode) onToolClick(tool)
+                                    },
+                                    onFavoriteToggle = {
+                                        if (uiState.isEditMode) {
+                                            viewModel.toggleFavorite(tool)
+                                        } else {
+                                            viewModel.toggleFavorite(tool)
+                                        }
+                                    },
+                                    isEditMode = uiState.isEditMode,
+                                    onMoveUp = if (uiState.isEditMode && index > 0) {
+                                        { viewModel.reorderFavorites(index, index - 1) }
+                                    } else null,
+                                    onMoveDown = if (uiState.isEditMode && index < favoriteTools.size - 1) {
+                                        { viewModel.reorderFavorites(index, index + 1) }
+                                    } else null,
+                                )
+                            }
+                        }
+                    }
+
+                    // Section header
+                    if (!uiState.isEditMode) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "FAVORITES",
+                                text = when {
+                                    uiState.isSearchActive && uiState.searchQuery.isNotBlank() ->
+                                        "RESULTS (${uiState.tools.size})"
+                                    uiState.selectedCategory != null ->
+                                        uiState.selectedCategory!!.displayName.uppercase()
+                                    else -> "ALL TOOLS"
+                                },
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.tertiary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        items(favoriteTools, key = { "fav_${it.name}" }) { tool ->
+
+                        // Tool tiles
+                        items(uiState.tools, key = { it.name }) { tool ->
                             ToolCard(
                                 tool = tool,
-                                isFavorite = true,
+                                isFavorite = tool.name in uiState.favoriteIds,
                                 onClick = { onToolClick(tool) },
                                 onFavoriteToggle = { viewModel.toggleFavorite(tool) },
                             )
                         }
-                    }
-
-                    // Section header — full width
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = when {
-                                uiState.isSearchActive && uiState.searchQuery.isNotBlank() ->
-                                    "RESULTS (${uiState.tools.size})"
-                                uiState.selectedCategory != null ->
-                                    uiState.selectedCategory!!.displayName.uppercase()
-                                else -> "ALL TOOLS"
-                            },
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-
-                    // Tool tiles — adaptive columns
-                    items(uiState.tools, key = { it.name }) { tool ->
-                        ToolCard(
-                            tool = tool,
-                            isFavorite = tool.name in uiState.favoriteIds,
-                            onClick = { onToolClick(tool) },
-                            onFavoriteToggle = { viewModel.toggleFavorite(tool) },
-                        )
                     }
 
                     // Bottom spacing

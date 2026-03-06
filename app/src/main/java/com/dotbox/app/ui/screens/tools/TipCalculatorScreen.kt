@@ -22,12 +22,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -37,30 +41,51 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dotbox.app.ui.components.ToolScreenScaffold
 import com.dotbox.app.ui.theme.JetBrainsMono
 import java.util.Locale
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 @Composable
 fun TipCalculatorScreen(onBack: () -> Unit) {
     var billAmount by rememberSaveable { mutableStateOf("") }
     var tipPercent by rememberSaveable { mutableFloatStateOf(15f) }
     var splitCount by rememberSaveable { mutableIntStateOf(1) }
+    var isCustomSplit by rememberSaveable { mutableStateOf(false) }
+    var roundUp by rememberSaveable { mutableStateOf(false) }
+
+    // Custom split percentages per person (must sum to 100)
+    val customShares = remember { mutableStateListOf<Float>() }
+
+    // Sync custom shares when split count changes
+    LaunchedEffect(splitCount) {
+        if (customShares.size != splitCount) {
+            customShares.clear()
+            val equalShare = 100f / splitCount
+            repeat(splitCount) { customShares.add(equalShare) }
+        }
+    }
 
     val bill = billAmount.toDoubleOrNull() ?: 0.0
     val tipAmount by remember(bill, tipPercent) {
         derivedStateOf { bill * tipPercent / 100.0 }
     }
-    val total by remember(bill, tipAmount) {
+    val rawTotal by remember(bill, tipAmount) {
         derivedStateOf { bill + tipAmount }
+    }
+    val total by remember(rawTotal, roundUp) {
+        derivedStateOf { if (roundUp && rawTotal > 0) ceil(rawTotal) else rawTotal }
+    }
+    val effectiveTip by remember(total, bill) {
+        derivedStateOf { total - bill }
     }
     val perPerson by remember(total, splitCount) {
         derivedStateOf { if (splitCount > 0) total / splitCount else total }
     }
-    val tipPerPerson by remember(tipAmount, splitCount) {
-        derivedStateOf { if (splitCount > 0) tipAmount / splitCount else tipAmount }
+    val tipPerPerson by remember(effectiveTip, splitCount) {
+        derivedStateOf { if (splitCount > 0) effectiveTip / splitCount else effectiveTip }
     }
 
     val quickTips = listOf(10, 15, 18, 20, 25)
@@ -131,6 +156,40 @@ fun TipCalculatorScreen(onBack: () -> Unit) {
                 ),
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Round up switch
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column {
+                    Text(
+                        text = "Round up total",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "Round to nearest dollar",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = roundUp,
+                    onCheckedChange = { roundUp = it },
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = MaterialTheme.colorScheme.tertiary,
+                        checkedThumbColor = MaterialTheme.colorScheme.onTertiary,
+                    ),
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Split
@@ -153,6 +212,96 @@ fun TipCalculatorScreen(onBack: () -> Unit) {
                 ),
             )
 
+            // Equal / Custom split toggle (only when split > 1)
+            if (splitCount > 1) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = !isCustomSplit,
+                        onClick = { isCustomSplit = false },
+                        label = { Text("Equal Split") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                            selectedLabelColor = MaterialTheme.colorScheme.tertiary,
+                        ),
+                    )
+                    FilterChip(
+                        selected = isCustomSplit,
+                        onClick = { isCustomSplit = true },
+                        label = { Text("Custom Split") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                            selectedLabelColor = MaterialTheme.colorScheme.tertiary,
+                        ),
+                    )
+                }
+
+                // Custom split sliders
+                if (isCustomSplit && customShares.size == splitCount) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = "CUSTOM SHARES",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        customShares.forEachIndexed { index, share ->
+                            val personAmount = total * share / 100.0
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = "P${index + 1}",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontFamily = JetBrainsMono,
+                                        fontWeight = FontWeight.Bold,
+                                    ),
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.width(28.dp),
+                                )
+                                Slider(
+                                    value = share,
+                                    onValueChange = { newVal ->
+                                        // Redistribute remaining % equally among others
+                                        val clamped = newVal.coerceIn(0f, 100f)
+                                        val remaining = 100f - clamped
+                                        val otherCount = splitCount - 1
+                                        if (otherCount > 0) {
+                                            val otherShare = remaining / otherCount
+                                            for (i in customShares.indices) {
+                                                customShares[i] = if (i == index) clamped else otherShare
+                                            }
+                                        }
+                                    },
+                                    valueRange = 0f..100f,
+                                    modifier = Modifier.weight(1f),
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = MaterialTheme.colorScheme.tertiary,
+                                        activeTrackColor = MaterialTheme.colorScheme.tertiary,
+                                    ),
+                                )
+                                Text(
+                                    text = "${share.roundToInt()}%",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = JetBrainsMono),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.width(36.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             // Results
@@ -163,21 +312,38 @@ fun TipCalculatorScreen(onBack: () -> Unit) {
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(20.dp),
             ) {
-                ResultRow("Bill", formatCurrency(bill))
-                ResultRow("Tip (${tipPercent.toInt()}%)", formatCurrency(tipAmount))
+                TipResultRow("Bill", formatTipCurrency(bill))
+                TipResultRow("Tip (${tipPercent.toInt()}%)", formatTipCurrency(tipAmount))
+                if (roundUp && rawTotal != total) {
+                    TipResultRow("Round up", formatTipCurrency(total - rawTotal))
+                    TipResultRow("Effective Tip", formatTipCurrency(effectiveTip))
+                }
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
                     color = MaterialTheme.colorScheme.outline,
                 )
-                ResultRow("Total", formatCurrency(total), bold = true)
+                TipResultRow("Total", formatTipCurrency(total), bold = true)
 
                 if (splitCount > 1) {
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         color = MaterialTheme.colorScheme.outline,
                     )
-                    ResultRow("Per Person", formatCurrency(perPerson), bold = true, accent = true)
-                    ResultRow("Tip Each", formatCurrency(tipPerPerson))
+
+                    if (isCustomSplit && customShares.size == splitCount) {
+                        // Show per-person custom breakdown
+                        customShares.forEachIndexed { index, share ->
+                            val personTotal = total * share / 100.0
+                            TipResultRow(
+                                "Person ${index + 1} (${share.roundToInt()}%)",
+                                formatTipCurrency(personTotal),
+                                accent = index == 0,
+                            )
+                        }
+                    } else {
+                        TipResultRow("Per Person", formatTipCurrency(perPerson), bold = true, accent = true)
+                        TipResultRow("Tip Each", formatTipCurrency(tipPerPerson))
+                    }
                 }
             }
 
@@ -187,7 +353,7 @@ fun TipCalculatorScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun ResultRow(
+private fun TipResultRow(
     label: String,
     value: String,
     bold: Boolean = false,
@@ -216,6 +382,6 @@ private fun ResultRow(
     }
 }
 
-private fun formatCurrency(amount: Double): String {
+private fun formatTipCurrency(amount: Double): String {
     return String.format(Locale.US, "$%.2f", amount)
 }

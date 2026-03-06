@@ -79,6 +79,10 @@ dependencies {
     // Window (foldable support)
     implementation(libs.androidx.window)
 
+    // Glance (App Widget)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
     // CameraX
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)

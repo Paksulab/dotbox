@@ -7,6 +7,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,12 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +46,9 @@ fun ToolCard(
     onClick: () -> Unit,
     onFavoriteToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    isEditMode: Boolean = false,
+    onMoveUp: (() -> Unit)? = null,
+    onMoveDown: (() -> Unit)? = null,
 ) {
     val favoriteColor by animateColorAsState(
         targetValue = if (isFavorite) NothingRed else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
@@ -58,25 +66,86 @@ fun ToolCard(
             containerColor = tool.category.accentColor.copy(alpha = 0.08f),
         ),
         border = BorderStroke(
-            width = 1.dp,
-            color = tool.category.accentColor.copy(alpha = 0.2f),
+            width = if (isEditMode) 2.dp else 1.dp,
+            color = if (isEditMode) {
+                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
+            } else {
+                tool.category.accentColor.copy(alpha = 0.2f)
+            },
         ),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Favorite button — top right
-            IconButton(
-                onClick = onFavoriteToggle,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(44.dp)
-                    .padding(6.dp),
-            ) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                    tint = favoriteColor,
-                    modifier = Modifier.size(22.dp),
-                )
+            if (isEditMode) {
+                // Edit mode: remove button (top-right)
+                IconButton(
+                    onClick = onFavoriteToggle,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(36.dp)
+                        .padding(4.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = NothingRed.copy(alpha = 0.15f),
+                    ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Remove from favorites",
+                        tint = NothingRed,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+
+                // Edit mode: reorder arrows (bottom)
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    if (onMoveUp != null) {
+                        IconButton(
+                            onClick = onMoveUp,
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.KeyboardArrowUp,
+                                contentDescription = "Move up",
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
+                    if (onMoveDown != null) {
+                        IconButton(
+                            onClick = onMoveDown,
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.KeyboardArrowDown,
+                                contentDescription = "Move down",
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Normal mode: favourite heart button (top-right)
+                IconButton(
+                    onClick = onFavoriteToggle,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(44.dp)
+                        .padding(6.dp),
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        tint = favoriteColor,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
             }
 
             // Icon + Name — centered

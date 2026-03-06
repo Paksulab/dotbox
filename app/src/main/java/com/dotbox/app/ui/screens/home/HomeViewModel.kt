@@ -17,9 +17,11 @@ import kotlinx.coroutines.launch
 data class HomeUiState(
     val tools: List<ToolId> = ToolId.entries,
     val favoriteIds: Set<String> = emptySet(),
+    val favoriteToolsOrdered: List<ToolId> = emptyList(),
     val searchQuery: String = "",
     val selectedCategory: ToolCategory? = null,
     val isSearchActive: Boolean = false,
+    val isEditMode: Boolean = false,
 )
 
 class HomeViewModel(private val repository: ToolsRepository) : ViewModel() {
@@ -33,12 +35,26 @@ class HomeViewModel(private val repository: ToolsRepository) : ViewModel() {
     private val _isSearchActive = MutableStateFlow(false)
     val isSearchActive: StateFlow<Boolean> = _isSearchActive.asStateFlow()
 
+    private val _isEditMode = MutableStateFlow(false)
+    val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
+
     val uiState: StateFlow<HomeUiState> = combine(
         _searchQuery,
         _selectedCategory,
         repository.favoriteIds,
         _isSearchActive,
-    ) { query, category, favIds, searchActive ->
+        _isEditMode,
+        repository.favoriteToolsOrdered,
+    ) { values ->
+        val query = values[0] as String
+        val category = values[1] as? ToolCategory
+        @Suppress("UNCHECKED_CAST")
+        val favIds = values[2] as List<String>
+        val searchActive = values[3] as Boolean
+        val editMode = values[4] as Boolean
+        @Suppress("UNCHECKED_CAST")
+        val orderedFavs = values[5] as List<ToolId>
+
         val filteredTools = when {
             query.isNotBlank() -> repository.searchTools(query)
             category != null -> repository.getToolsByCategory(category)
@@ -47,9 +63,11 @@ class HomeViewModel(private val repository: ToolsRepository) : ViewModel() {
         HomeUiState(
             tools = filteredTools,
             favoriteIds = favIds.toSet(),
+            favoriteToolsOrdered = orderedFavs,
             searchQuery = query,
             selectedCategory = category,
             isSearchActive = searchActive,
+            isEditMode = editMode,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -85,6 +103,20 @@ class HomeViewModel(private val repository: ToolsRepository) : ViewModel() {
             } else {
                 repository.addFavorite(toolId)
             }
+        }
+    }
+
+    fun toggleEditMode() {
+        _isEditMode.value = !_isEditMode.value
+    }
+
+    fun exitEditMode() {
+        _isEditMode.value = false
+    }
+
+    fun reorderFavorites(fromIndex: Int, toIndex: Int) {
+        viewModelScope.launch {
+            repository.reorderFavorites(fromIndex, toIndex)
         }
     }
 

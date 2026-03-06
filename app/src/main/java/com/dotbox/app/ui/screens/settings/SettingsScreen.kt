@@ -48,6 +48,7 @@ private const val KEY_THEME = "theme_mode"
 private const val KEY_GRID_COLUMNS = "grid_columns"
 private const val KEY_HAPTIC_FEEDBACK = "haptic_feedback"
 private const val KEY_DEFAULT_CATEGORY = "default_category"
+private const val KEY_TWO_PANE = "two_pane_layout"
 
 // ── Persistence helpers ─────────────────────────────────────────────────────
 
@@ -77,6 +78,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     var gridColumns by remember { mutableStateOf(loadString(context, KEY_GRID_COLUMNS, "auto")) }
     var hapticFeedback by remember { mutableStateOf(loadBoolean(context, KEY_HAPTIC_FEEDBACK, true)) }
     var defaultCategory by remember { mutableStateOf(loadString(context, KEY_DEFAULT_CATEGORY, "all")) }
+    var twoPaneLayout by remember { mutableStateOf(loadBoolean(context, KEY_TWO_PANE, false)) }
 
     ToolScreenScaffold(
         title = "Settings",
@@ -181,6 +183,37 @@ fun SettingsScreen(onBack: () -> Unit) {
                             saveString(context, KEY_DEFAULT_CATEGORY, it)
                         }
                     )
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                    )
+
+                    // Two-pane layout (tablet/foldable)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            SettingLabel(
+                                title = "Two-Pane Layout",
+                                description = "Side-by-side view on tablets & foldables"
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Switch(
+                            checked = twoPaneLayout,
+                            onCheckedChange = {
+                                twoPaneLayout = it
+                                saveBoolean(context, KEY_TWO_PANE, it)
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.tertiary,
+                                checkedThumbColor = MaterialTheme.colorScheme.onTertiary
+                            )
+                        )
+                    }
                 }
             }
 
@@ -201,7 +234,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "v1.1.1",
+                            text = "v1.2.0",
                             style = MaterialTheme.typography.bodyMedium,
                             fontFamily = JetBrainsMono,
                             color = MaterialTheme.colorScheme.tertiary
@@ -215,7 +248,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "48 tools · 7 categories",
+                        text = "51 tools · 7 categories",
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = JetBrainsMono,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)

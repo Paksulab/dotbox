@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.AvTimer
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.ChildCare
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material.icons.outlined.Exposure
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.GridView
@@ -47,6 +48,7 @@ import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.ui.graphics.Color
@@ -339,6 +341,27 @@ enum class ToolId(
         icon = Icons.Outlined.GraphicEq,
         category = ToolCategory.GENERATORS,
         route = "tool_frequency",
+    ),
+    WHITE_NOISE(
+        toolName = "White Noise",
+        description = "Ambient sound & sleep timer",
+        icon = Icons.AutoMirrored.Filled.VolumeUp,
+        category = ToolCategory.GENERATORS,
+        route = "tool_white_noise",
+    ),
+    WIFI_QR(
+        toolName = "WiFi QR",
+        description = "Share WiFi via QR code",
+        icon = Icons.Outlined.QrCode2,
+        category = ToolCategory.GENERATORS,
+        route = "tool_wifi_qr",
+    ),
+    COLOR_FROM_CAMERA(
+        toolName = "Camera Color",
+        description = "Pick colors from camera",
+        icon = Icons.Outlined.Colorize,
+        category = ToolCategory.GENERATORS,
+        route = "tool_camera_color",
     ),
 
     // ── Scanners ──

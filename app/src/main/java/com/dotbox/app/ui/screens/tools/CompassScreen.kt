@@ -5,39 +5,54 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dotbox.app.ui.components.ToolScreenScaffold
@@ -50,6 +65,7 @@ import kotlin.math.sin
 fun CompassScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     var azimuth by remember { mutableFloatStateOf(0f) }
+    var sensorAccuracy by remember { mutableIntStateOf(SensorManager.SENSOR_STATUS_ACCURACY_HIGH) }
 
     val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
 
@@ -75,7 +91,11 @@ fun CompassScreen(onBack: () -> Unit) {
                     if (azimuth < 0) azimuth += 360f
                 }
             }
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                if (sensor?.type == Sensor.TYPE_MAGNETIC_FIELD) {
+                    sensorAccuracy = accuracy
+                }
+            }
         }
 
         accelerometer?.let {
@@ -111,6 +131,20 @@ fun CompassScreen(onBack: () -> Unit) {
         else -> "N"
     }
 
+    // Accuracy indicators
+    val accuracyColor = when (sensorAccuracy) {
+        SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> Color(0xFF4CAF50) // Green
+        SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> Color(0xFFFFC107) // Amber
+        else -> NothingRed // Red for LOW or UNRELIABLE
+    }
+    val accuracyLabel = when (sensorAccuracy) {
+        SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> "High accuracy"
+        SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> "Medium accuracy"
+        SensorManager.SENSOR_STATUS_ACCURACY_LOW -> "Low accuracy"
+        else -> "Unreliable"
+    }
+    val needsCalibration = sensorAccuracy <= SensorManager.SENSOR_STATUS_ACCURACY_LOW
+
     val textMeasurer = rememberTextMeasurer()
     val onSurface = MaterialTheme.colorScheme.onSurface
     val outline = MaterialTheme.colorScheme.outline
@@ -123,6 +157,35 @@ fun CompassScreen(onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
+            // Calibration banner
+            AnimatedVisibility(
+                visible = needsCalibration,
+                enter = expandVertically(),
+                exit = shrinkVertically(),
+            ) {
+                CalibrationBanner()
+            }
+
+            // Accuracy indicator
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(accuracyColor),
+                )
+                Text(
+                    text = accuracyLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Degree display
             Text(
                 text = "${azimuth.toInt()}°",
@@ -151,7 +214,7 @@ fun CompassScreen(onBack: () -> Unit) {
                         color = outline.copy(alpha = 0.3f),
                         radius = radius,
                         center = center,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()),
+                        style = Stroke(width = 2.dp.toPx()),
                     )
 
                     // Rotate the compass rose
@@ -159,8 +222,8 @@ fun CompassScreen(onBack: () -> Unit) {
                         // Tick marks
                         for (i in 0 until 360 step 5) {
                             val angle = Math.toRadians(i.toDouble())
-                            val isMajor = i % 30 == 0
                             val isCardinal = i % 90 == 0
+                            val isMajor = i % 30 == 0
                             val tickLength = when {
                                 isCardinal -> 20.dp.toPx()
                                 isMajor -> 12.dp.toPx()
@@ -213,7 +276,7 @@ fun CompassScreen(onBack: () -> Unit) {
                             )
                         }
 
-                        // North pointer (red triangle)
+                        // North pointer (red)
                         val pointerLength = radius - 60.dp.toPx()
                         drawLine(
                             color = NothingRed,
@@ -240,6 +303,83 @@ fun CompassScreen(onBack: () -> Unit) {
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CalibrationBanner() {
+    val infiniteTransition = rememberInfiniteTransition(label = "figure8")
+    val phase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "figure8Phase",
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(NothingRed.copy(alpha = 0.1f))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "Calibration needed",
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+            color = NothingRed,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Move your phone in a figure-8 pattern",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Animated figure-8 guide
+        Canvas(
+            modifier = Modifier
+                .size(width = 120.dp, height = 60.dp),
+        ) {
+            val cx = size.width / 2f
+            val cy = size.height / 2f
+            val rx = size.width / 2f - 8.dp.toPx()
+            val ry = size.height / 2f - 8.dp.toPx()
+
+            // Draw figure-8 path
+            val points = 100
+            for (i in 0 until points) {
+                val t = i.toFloat() / points * 2f * Math.PI.toFloat()
+                val x = cx + rx * sin(t)
+                val y = cy + ry * sin(2f * t) / 2f
+                val nextT = (i + 1).toFloat() / points * 2f * Math.PI.toFloat()
+                val nx = cx + rx * sin(nextT)
+                val ny = cy + ry * sin(2f * nextT) / 2f
+
+                drawLine(
+                    color = NothingRed.copy(alpha = 0.3f),
+                    start = Offset(x, y),
+                    end = Offset(nx, ny),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+            }
+
+            // Animated dot on the path
+            val t = phase * 2f * Math.PI.toFloat()
+            val dotX = cx + rx * sin(t)
+            val dotY = cy + ry * sin(2f * t) / 2f
+            drawCircle(
+                color = NothingRed,
+                radius = 6.dp.toPx(),
+                center = Offset(dotX, dotY),
+            )
         }
     }
 }

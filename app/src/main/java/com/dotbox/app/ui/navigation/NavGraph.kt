@@ -1,10 +1,12 @@
 package com.dotbox.app.ui.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -12,6 +14,7 @@ import androidx.navigation.compose.composable
 import com.dotbox.app.data.model.ToolId
 import com.dotbox.app.data.repository.ToolsRepository
 import com.dotbox.app.ui.screens.home.HomeScreen
+import com.dotbox.app.ui.screens.home.TwoPaneHomeScreen
 import com.dotbox.app.ui.screens.tools.AspectRatioCalculatorScreen
 import com.dotbox.app.ui.screens.tools.BatteryInfoScreen
 import com.dotbox.app.ui.screens.tools.CalculatorScreen
@@ -60,51 +63,77 @@ import com.dotbox.app.ui.screens.tools.CookingConverterScreen
 import com.dotbox.app.ui.screens.tools.ClothingSizeScreen
 import com.dotbox.app.ui.screens.tools.MorseCodeScreen
 import com.dotbox.app.ui.screens.tools.FrequencyGeneratorScreen
+import com.dotbox.app.ui.screens.tools.WhiteNoiseScreen
+import com.dotbox.app.ui.screens.tools.WifiQRScreen
+import com.dotbox.app.ui.screens.tools.CameraColorPickerScreen
+import com.dotbox.app.ui.screens.onboarding.OnboardingScreen
 import com.dotbox.app.ui.screens.settings.SettingsScreen
 
 @Composable
 fun DotBoxNavGraph(
     navController: NavHostController,
     repository: ToolsRepository,
+    startDestination: String = Screen.Home.route,
+    useTwoPane: Boolean = false,
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route,
+        startDestination = startDestination,
         enterTransition = {
-            fadeIn(spring(stiffness = Spring.StiffnessMediumLow)) +
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessMediumLow,
-                    ),
-                    initialOffset = { it / 4 },
-                )
+            scaleIn(
+                initialScale = 0.92f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessMediumLow,
+                ),
+            ) + fadeIn(spring(stiffness = Spring.StiffnessMediumLow))
         },
         exitTransition = {
-            fadeOut(spring(stiffness = Spring.StiffnessMediumLow))
+            scaleOut(
+                targetScale = 1.05f,
+                animationSpec = tween(durationMillis = 200),
+            ) + fadeOut(tween(durationMillis = 200))
         },
         popEnterTransition = {
-            fadeIn(spring(stiffness = Spring.StiffnessMediumLow)) +
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.End,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessMediumLow,
-                    ),
-                    initialOffset = { it / 4 },
-                )
+            scaleIn(
+                initialScale = 1.05f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessMediumLow,
+                ),
+            ) + fadeIn(spring(stiffness = Spring.StiffnessMediumLow))
         },
         popExitTransition = {
-            fadeOut(spring(stiffness = Spring.StiffnessMediumLow))
+            scaleOut(
+                targetScale = 0.92f,
+                animationSpec = tween(durationMillis = 200),
+            ) + fadeOut(tween(durationMillis = 200))
         },
     ) {
-        composable(Screen.Home.route) {
-            HomeScreen(
-                repository = repository,
-                onToolClick = { tool -> navController.navigate(tool.route) },
-                onSettingsClick = { navController.navigate(Screen.Settings.route) },
+        // ── Onboarding ──
+        composable(Screen.Onboarding.route) {
+            OnboardingScreen(
+                onComplete = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    }
+                },
             )
+        }
+
+        composable(Screen.Home.route) {
+            if (useTwoPane) {
+                TwoPaneHomeScreen(
+                    repository = repository,
+                    onSettingsClick = { navController.navigate(Screen.Settings.route) },
+                )
+            } else {
+                HomeScreen(
+                    repository = repository,
+                    onToolClick = { tool -> navController.navigate(tool.route) },
+                    onSettingsClick = { navController.navigate(Screen.Settings.route) },
+                )
+            }
         }
 
         composable(Screen.Settings.route) {
@@ -227,6 +256,15 @@ fun DotBoxNavGraph(
         }
         composable(ToolId.FREQUENCY_GENERATOR.route) {
             FrequencyGeneratorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.WHITE_NOISE.route) {
+            WhiteNoiseScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.WIFI_QR.route) {
+            WifiQRScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.COLOR_FROM_CAMERA.route) {
+            CameraColorPickerScreen(onBack = { navController.popBackStack() })
         }
 
         // ── Scanners ──

@@ -7,19 +7,32 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
 import com.dotbox.app.ui.navigation.DotBoxNavGraph
+import com.dotbox.app.ui.navigation.Screen
+import com.dotbox.app.ui.screens.onboarding.hasSeenOnboarding
 import com.dotbox.app.ui.theme.DotBoxTheme
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         val app = application as DotBoxApplication
+
+        // Determine start destination before setContent (synchronous read)
+        val startDest = if (hasSeenOnboarding(this)) {
+            Screen.Home.route
+        } else {
+            Screen.Onboarding.route
+        }
 
         setContent {
             val prefs = remember {
@@ -47,10 +60,16 @@ class MainActivity : ComponentActivity() {
             }
 
             DotBoxTheme(darkTheme = isDark) {
+                val windowSizeClass = calculateWindowSizeClass(this@MainActivity)
+                val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+                val twoPaneEnabled = prefs.getBoolean("two_pane_layout", false)
+
                 val navController = rememberNavController()
                 DotBoxNavGraph(
                     navController = navController,
                     repository = app.toolsRepository,
+                    startDestination = startDest,
+                    useTwoPane = isExpanded && twoPaneEnabled,
                 )
             }
         }
