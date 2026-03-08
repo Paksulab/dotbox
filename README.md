@@ -5,7 +5,7 @@
 <h1 align="center">dotBox</h1>
 
 <p align="center">
-  <strong>57 tools. One app. Zero clutter.</strong><br>
+  <strong>55 tools. One app. Zero clutter.</strong><br>
   A minimalist Android toolkit built with Jetpack Compose.
 </p>
 
@@ -18,7 +18,7 @@
 
 ## About
 
-dotBox is a utility toolkit app that puts 57+ tools in your pocket — from calculators and converters to timers, fitness tools, and scanners. Everything runs locally on your device with no accounts, no tracking, and no ads.
+dotBox is a utility toolkit app that puts 55+ tools in your pocket — from calculators and converters to timers, fitness tools, and scanners. Everything runs locally on your device with no accounts, no tracking, and no ads.
 
 Designed with a Nothing-inspired dark aesthetic using JetBrains Mono typography and a monochrome + red accent palette.
 
@@ -26,14 +26,14 @@ Designed with a Nothing-inspired dark aesthetic using JetBrains Mono typography 
 
 | Category | Tools | Examples |
 |----------|-------|---------|
-| **Utility** | 12 | Flashlight, Compass, Level, Ruler, QR Scanner, Sound Meter |
-| **Calculators** | 9 | Tip Calculator, Percentage, Loan, Aspect Ratio, Age Calculator |
-| **Measurement** | 5 | Stopwatch, Countdown, Pomodoro Timer, Split Timer, Workout Timer |
-| **Converters** | 5 | Unit Converter, Currency, Cooking Measures, Time Zones, Number Base |
-| **Generators** | 6 | Random Numbers, Dice, Coin Flip, Password Generator, Color Palette |
-| **Scanners** | 3 | QR Scanner, QR Generator, Document Scanner |
-| **Medical** | 5 | BMI, Dose Calculator, IV Drip Rate, Ideal Body Weight, BAC |
-| **Fitness** | 5 | One Rep Max, Heart Rate Zones, Body Fat %, Calorie Estimator, Water Intake |
+| **Utility** | 12 | Flashlight, Stopwatch, Countdown, Pomodoro, Counter, Clipboard |
+| **Calculators** | 6 | Scientific Calculator, Tip Splitter, Percentage, Loan, Aspect Ratio, Date Math |
+| **Measurement** | 7 | Compass, Level, Ruler, Sound Meter, Speedometer, Magnifier, Light Meter |
+| **Converters** | 7 | Unit Converter, Currency, Cooking, Time Zones, Number Base, Clothing, Morse Code |
+| **Generators** | 6 | QR Generator, Color Picker, Text Tools, Tone Generator, WiFi QR, Camera Color |
+| **Scanners** | 2 | QR Scanner, Document Scanner |
+| **Fitness** | 11 | BMI, BMR/TDEE, Heart Rate Zones, Body Fat %, Water Intake, Workout Timer, 1RM |
+| **Medical** | 4 | BAC Calculator, Due Date, Dose Calculator, IV Drip Rate |
 
 ## Features
 
@@ -89,7 +89,7 @@ app/src/main/java/com/dotbox/app/
 │   │   ├── home/       # HomeScreen, HomeViewModel, TwoPaneHomeScreen
 │   │   ├── onboarding/ # First-launch onboarding
 │   │   ├── settings/   # App settings
-│   │   └── tools/      # 57 individual tool screens
+│   │   └── tools/      # 55 individual tool screens
 │   ├── theme/          # Colors, Typography
 │   └── utils/
 └── widget/             # Home screen widget (Glance)
