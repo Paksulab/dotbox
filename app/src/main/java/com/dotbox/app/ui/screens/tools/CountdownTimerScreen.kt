@@ -49,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.dotbox.app.ReminderReceiver
 import com.dotbox.app.data.preferences.AppPreferences
 import com.dotbox.app.ui.components.ToolScreenScaffold
 import com.dotbox.app.ui.theme.JetBrainsMono
@@ -119,6 +120,18 @@ fun CountdownTimerScreen(onBack: () -> Unit) {
     // Saved countdowns
     var savedCountdowns by remember { mutableStateOf(loadCountdowns(context)) }
 
+    // Re-schedule alarms for all future saved countdowns (survives app restarts)
+    LaunchedEffect(Unit) {
+        savedCountdowns.forEach { countdown ->
+            val target = LocalDateTime.of(
+                LocalDate.parse(countdown.targetDate),
+                LocalTime.parse(countdown.targetTime),
+            )
+            val millis = target.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            ReminderReceiver.scheduleCountdownAlarm(context, countdown.id, countdown.name, millis)
+        }
+    }
+
     val targetDate = LocalDate.parse(targetDateStr)
     val targetTime = LocalTime.parse(targetTimeStr)
     val targetDateTime = LocalDateTime.of(targetDate, targetTime)
@@ -171,9 +184,18 @@ fun CountdownTimerScreen(onBack: () -> Unit) {
         )
         savedCountdowns = savedCountdowns + new
         saveCountdowns(context, savedCountdowns)
+
+        // Schedule alarm notification for this event
+        val target = LocalDateTime.of(
+            LocalDate.parse(targetDateStr),
+            LocalTime.parse(targetTimeStr),
+        )
+        val millis = target.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        ReminderReceiver.scheduleCountdownAlarm(context, new.id, name, millis)
     }
 
     fun deleteCountdown(id: String) {
+        ReminderReceiver.cancelCountdownAlarm(context, id)
         savedCountdowns = savedCountdowns.filter { it.id != id }
         saveCountdowns(context, savedCountdowns)
     }

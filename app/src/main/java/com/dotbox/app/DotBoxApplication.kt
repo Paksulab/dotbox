@@ -17,19 +17,53 @@ class DotBoxApplication : Application() {
     }
 
     private fun createNotificationChannels() {
-        val pomodoroChannel = NotificationChannel(
-            CHANNEL_POMODORO,
-            "Pomodoro Timer",
-            NotificationManager.IMPORTANCE_HIGH,
-        ).apply {
-            description = "Notifications when a Pomodoro session finishes"
-        }
+        val channels = listOf(
+            NotificationChannel(
+                CHANNEL_POMODORO,
+                "Pomodoro Timer",
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = "Notifications when a Pomodoro session finishes"
+            },
+            NotificationChannel(
+                CHANNEL_COUNTDOWN,
+                "Countdown Timer",
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = "Notifications when a countdown event arrives"
+            },
+            NotificationChannel(
+                CHANNEL_WORKOUT,
+                "Workout Timer",
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = "Workout phase transitions and completion"
+            },
+            NotificationChannel(
+                CHANNEL_STOPWATCH,
+                "Stopwatch Timer",
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = "Notification when a timer countdown reaches zero"
+            },
+            NotificationChannel(
+                CHANNEL_WATER_INTAKE,
+                "Water Intake Reminders",
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = "Periodic reminders to drink water"
+            },
+        )
 
         val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(pomodoroChannel)
+        manager.createNotificationChannels(channels)
     }
 
     companion object {
         const val CHANNEL_POMODORO = "pomodoro_timer"
+        const val CHANNEL_COUNTDOWN = "countdown_timer"
+        const val CHANNEL_WORKOUT = "workout_timer"
+        const val CHANNEL_STOPWATCH = "stopwatch_timer"
+        const val CHANNEL_WATER_INTAKE = "water_intake"
     }
 }

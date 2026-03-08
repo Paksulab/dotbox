@@ -1,5 +1,9 @@
 package com.dotbox.app.ui.screens.tools
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -15,17 +19,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import com.dotbox.app.ReminderReceiver
+import com.dotbox.app.data.preferences.AppPreferences
 import com.dotbox.app.ui.components.ToolScreenScaffold
 import com.dotbox.app.ui.theme.JetBrainsMono
 import java.util.Locale
 
+private data class ReminderInterval(val label: String, val minutes: Int)
+
+private val reminderIntervals = listOf(
+    ReminderInterval("30 min", 30),
+    ReminderInterval("1 hr", 60),
+    ReminderInterval("1.5 hr", 90),
+    ReminderInterval("2 hr", 120),
+    ReminderInterval("3 hr", 180),
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun WaterIntakeScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val prefs = AppPreferences.get(context)
+
     ToolScreenScaffold(
         title = "Water Intake Calculator",
         onBack = onBack
@@ -36,6 +58,27 @@ fun WaterIntakeScreen(onBack: () -> Unit) {
         var useKg by rememberSaveable { mutableStateOf(true) }
         var activityLevel by rememberSaveable { mutableStateOf("Moderate") }
         var climate by rememberSaveable { mutableStateOf("Normal") }
+
+        // Water reminder state
+        var reminderEnabled by rememberSaveable {
+            mutableStateOf(prefs.getBoolean(AppPreferences.KEY_WATER_REMINDER_ENABLED, false))
+        }
+        var selectedInterval by rememberSaveable {
+            mutableIntStateOf(prefs.getInt(AppPreferences.KEY_WATER_REMINDER_INTERVAL, 60))
+        }
+
+        // Notification permission
+        var hasNotificationPermission by rememberSaveable {
+            mutableStateOf(
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                    ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.POST_NOTIFICATIONS,
+                    ) == PackageManager.PERMISSION_GRANTED,
+            )
+        }
+        val permissionLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { granted -> hasNotificationPermission = granted }
 
         val activityLevels = listOf("Sedentary", "Light", "Moderate", "Active", "Very Active")
         val climateOptions = listOf("Normal", "Hot", "Cold")
@@ -436,6 +479,101 @@ fun WaterIntakeScreen(onBack: () -> Unit) {
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
+                    }
+                }
+            }
+
+            // Water Reminder Section
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Toggle row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Drink Reminders",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = if (reminderEnabled) "Reminding every ${
+                                    reminderIntervals.find { it.minutes == selectedInterval }?.label
+                                        ?: "${selectedInterval}m"
+                                }" else "Get periodic reminders to stay hydrated",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = reminderEnabled,
+                            onCheckedChange = { enabled ->
+                                reminderEnabled = enabled
+                                prefs.edit()
+                                    .putBoolean(AppPreferences.KEY_WATER_REMINDER_ENABLED, enabled)
+                                    .apply()
+                                if (enabled) {
+                                    if (!hasNotificationPermission &&
+                                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                                    ) {
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                    ReminderReceiver.scheduleWaterReminder(context, selectedInterval)
+                                } else {
+                                    ReminderReceiver.cancelWaterReminder(context)
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.onTertiary,
+                                checkedTrackColor = MaterialTheme.colorScheme.tertiary,
+                            ),
+                        )
+                    }
+
+                    // Interval chips (only visible when enabled)
+                    if (reminderEnabled) {
+                        Text(
+                            text = "Reminder Interval",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            reminderIntervals.forEach { interval ->
+                                FilterChip(
+                                    selected = selectedInterval == interval.minutes,
+                                    onClick = {
+                                        selectedInterval = interval.minutes
+                                        prefs.edit()
+                                            .putInt(AppPreferences.KEY_WATER_REMINDER_INTERVAL, interval.minutes)
+                                            .apply()
+                                        // Reschedule with new interval
+                                        ReminderReceiver.cancelWaterReminder(context)
+                                        ReminderReceiver.scheduleWaterReminder(context, interval.minutes)
+                                    },
+                                    label = { Text(interval.label) },
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                                        selectedLabelColor = MaterialTheme.colorScheme.tertiary
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }

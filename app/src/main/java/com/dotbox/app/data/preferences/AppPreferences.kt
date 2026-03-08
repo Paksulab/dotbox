@@ -33,6 +33,13 @@ object AppPreferences {
     // Countdown
     const val KEY_SAVED_COUNTDOWNS = "saved_countdowns"
 
+    // Workout Timer
+    const val KEY_WORKOUT_NOTIFICATIONS = "workout_notifications"
+
+    // Water Intake Reminders
+    const val KEY_WATER_REMINDER_ENABLED = "water_reminder_enabled"
+    const val KEY_WATER_REMINDER_INTERVAL = "water_reminder_interval"
+
     fun get(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 }

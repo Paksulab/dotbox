@@ -1,6 +1,14 @@
 package com.dotbox.app.ui.screens.tools
 
+import android.Manifest
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.view.HapticFeedbackConstants
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -36,6 +44,8 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,11 +63,19 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import com.dotbox.app.DotBoxApplication
+import com.dotbox.app.MainActivity
+import com.dotbox.app.R
+import com.dotbox.app.data.preferences.AppPreferences
 import com.dotbox.app.ui.components.ToolScreenScaffold
 import com.dotbox.app.ui.theme.JetBrainsMono
 import com.dotbox.app.ui.theme.NothingRed
@@ -77,8 +95,41 @@ private enum class TimerPreset(
 
 private enum class IntervalPhase { WORK, REST }
 
+private fun sendWorkoutNotification(context: Context, title: String, body: String) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+        != PackageManager.PERMISSION_GRANTED
+    ) {
+        return
+    }
+
+    val intent = Intent(context, MainActivity::class.java).apply {
+        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+    }
+    val pendingIntent = PendingIntent.getActivity(
+        context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    val notification = NotificationCompat.Builder(context, DotBoxApplication.CHANNEL_WORKOUT)
+        .setSmallIcon(R.drawable.ic_launcher_foreground)
+        .setContentTitle(title)
+        .setContentText(body)
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setAutoCancel(true)
+        .setContentIntent(pendingIntent)
+        .build()
+
+    NotificationManagerCompat.from(context).notify(
+        System.currentTimeMillis().toInt(),
+        notification,
+    )
+}
+
 @Composable
 fun WorkoutTimerScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val prefs = AppPreferences.get(context)
+
     var selectedPreset by rememberSaveable { mutableStateOf(TimerPreset.TABATA.name) }
     var customWorkSec by rememberSaveable { mutableStateOf("30") }
     var customRestSec by rememberSaveable { mutableStateOf("15") }
@@ -90,6 +141,24 @@ fun WorkoutTimerScreen(onBack: () -> Unit) {
     var currentRound by rememberSaveable { mutableIntStateOf(1) }
     var phase by rememberSaveable { mutableStateOf(IntervalPhase.WORK) }
     var remainingMs by rememberSaveable { mutableLongStateOf(0L) }
+
+    // Notification toggle (persisted)
+    var notificationsEnabled by rememberSaveable {
+        mutableStateOf(prefs.getBoolean(AppPreferences.KEY_WORKOUT_NOTIFICATIONS, true))
+    }
+
+    // Notification permission
+    var hasNotificationPermission by rememberSaveable {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.POST_NOTIFICATIONS,
+                ) == PackageManager.PERMISSION_GRANTED,
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> hasNotificationPermission = granted }
 
     val view = LocalView.current
 
@@ -131,6 +200,12 @@ fun WorkoutTimerScreen(onBack: () -> Unit) {
                 if (restSec > 0) {
                     phase = IntervalPhase.REST
                     remainingMs = restSec * 1000L
+                    if (notificationsEnabled) {
+                        sendWorkoutNotification(
+                            context, "Rest Time",
+                            "Round $currentRound work done. Rest for ${restSec}s.",
+                        )
+                    }
                 } else if (currentRound < totalRounds) {
                     currentRound++
                     remainingMs = workSec * 1000L
@@ -138,6 +213,12 @@ fun WorkoutTimerScreen(onBack: () -> Unit) {
                     isRunning = false
                     isComplete = true
                     view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                    if (notificationsEnabled) {
+                        sendWorkoutNotification(
+                            context, "Workout Complete!",
+                            "$totalRounds rounds finished. Great job!",
+                        )
+                    }
                 }
             }
             IntervalPhase.REST -> {
@@ -145,23 +226,34 @@ fun WorkoutTimerScreen(onBack: () -> Unit) {
                     currentRound++
                     phase = IntervalPhase.WORK
                     remainingMs = workSec * 1000L
+                    if (notificationsEnabled) {
+                        sendWorkoutNotification(
+                            context, "Work Time!",
+                            "Round $currentRound — go for ${workSec}s!",
+                        )
+                    }
                 } else {
                     isRunning = false
                     isComplete = true
                     view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                    if (notificationsEnabled) {
+                        sendWorkoutNotification(
+                            context, "Workout Complete!",
+                            "$totalRounds rounds finished. Great job!",
+                        )
+                    }
                 }
             }
         }
     }
 
-    // Timer tick
+    // Timer tick — outer loop keeps running through phase transitions
     LaunchedEffect(isRunning, isPaused) {
-        if (isRunning && !isPaused) {
-            while (remainingMs > 0) {
+        while (isRunning && !isPaused) {
+            if (remainingMs > 0) {
                 delay(50L)
                 remainingMs -= 50L
-            }
-            if (isRunning) {
+            } else {
                 advancePhase()
             }
         }
@@ -449,6 +541,51 @@ fun WorkoutTimerScreen(onBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Notification toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Notifications",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "Notify on phase changes & completion",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = notificationsEnabled,
+                    onCheckedChange = { enabled ->
+                        notificationsEnabled = enabled
+                        prefs.edit()
+                            .putBoolean(AppPreferences.KEY_WORKOUT_NOTIFICATIONS, enabled)
+                            .apply()
+                        if (enabled && !hasNotificationPermission &&
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                        ) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onTertiary,
+                        checkedTrackColor = MaterialTheme.colorScheme.tertiary,
+                    ),
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))

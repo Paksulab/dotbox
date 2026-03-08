@@ -1,5 +1,11 @@
 package com.dotbox.app.ui.screens.tools
 
+import android.Manifest
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
@@ -59,12 +65,48 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import com.dotbox.app.DotBoxApplication
+import com.dotbox.app.MainActivity
+import com.dotbox.app.R
 import com.dotbox.app.ui.components.ToolScreenScaffold
 import com.dotbox.app.ui.screens.settings.animationsEnabled
 import com.dotbox.app.ui.theme.JetBrainsMono
 import com.dotbox.app.ui.theme.NothingRed
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+private fun sendTimerNotification(context: Context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+        != PackageManager.PERMISSION_GRANTED
+    ) {
+        return
+    }
+
+    val intent = Intent(context, MainActivity::class.java).apply {
+        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+    }
+    val pendingIntent = PendingIntent.getActivity(
+        context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    val notification = NotificationCompat.Builder(context, DotBoxApplication.CHANNEL_STOPWATCH)
+        .setSmallIcon(R.drawable.ic_launcher_foreground)
+        .setContentTitle("Time's Up!")
+        .setContentText("Your timer countdown has finished.")
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setAutoCancel(true)
+        .setContentIntent(pendingIntent)
+        .build()
+
+    NotificationManagerCompat.from(context).notify(
+        System.currentTimeMillis().toInt(),
+        notification,
+    )
+}
 
 private fun formatTime(millis: Long): String {
     val totalSeconds = millis / 1000
@@ -270,6 +312,7 @@ private fun TimerTab() {
                 if (remainingMillis <= 0) {
                     remainingMillis = 0
                     isRunning = false
+                    sendTimerNotification(context)
                 }
                 delay(10)
             }
