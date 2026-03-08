@@ -12,9 +12,12 @@ import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.DocumentScanner
+import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.FormatListNumbered
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.FlashlightOn
 import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.LocalBar
@@ -37,6 +40,7 @@ import androidx.compose.material.icons.outlined.Kitchen
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material.icons.outlined.QrCodeScanner
@@ -47,14 +51,16 @@ import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.TimerOff
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.outlined.Wifi
+import androidx.compose.material.icons.outlined.WifiTethering
 import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.dotbox.app.ui.theme.AccentCalculator
 import com.dotbox.app.ui.theme.AccentConvert
+import com.dotbox.app.ui.theme.AccentFitness
 import com.dotbox.app.ui.theme.AccentGenerate
 import com.dotbox.app.ui.theme.AccentMeasure
 import com.dotbox.app.ui.theme.AccentScan
@@ -71,6 +77,7 @@ enum class ToolCategory(
     CONVERTERS("Converters", AccentConvert),
     GENERATORS("Generators", AccentGenerate),
     SCANNERS("Scanners", AccentScan),
+    FITNESS("Fitness", AccentFitness),
     MEDICAL("Medical", AccentMedical),
 }
 
@@ -342,17 +349,10 @@ enum class ToolId(
         category = ToolCategory.GENERATORS,
         route = "tool_frequency",
     ),
-    WHITE_NOISE(
-        toolName = "White Noise",
-        description = "Ambient sound & sleep timer",
-        icon = Icons.AutoMirrored.Filled.VolumeUp,
-        category = ToolCategory.GENERATORS,
-        route = "tool_white_noise",
-    ),
     WIFI_QR(
         toolName = "WiFi QR",
         description = "Share WiFi via QR code",
-        icon = Icons.Outlined.QrCode2,
+        icon = Icons.Outlined.WifiTethering,
         category = ToolCategory.GENERATORS,
         route = "tool_wifi_qr",
     ),
@@ -380,35 +380,86 @@ enum class ToolId(
         route = "tool_doc_scanner",
     ),
 
-    // ── Medical ──
+    // ── Fitness ──
     BMI_CALCULATOR(
         toolName = "BMI Calculator",
         description = "Body Mass Index",
-        icon = Icons.Outlined.FitnessCenter,
-        category = ToolCategory.MEDICAL,
+        icon = Icons.Outlined.MonitorWeight,
+        category = ToolCategory.FITNESS,
         route = "tool_bmi",
     ),
     BMR_CALCULATOR(
         toolName = "BMR / TDEE",
         description = "Metabolic rate & calories",
         icon = Icons.Outlined.LocalFireDepartment,
-        category = ToolCategory.MEDICAL,
+        category = ToolCategory.FITNESS,
         route = "tool_bmr",
     ),
     HEART_RATE_ZONES(
         toolName = "Heart Rate Zones",
         description = "Training zones by HR",
         icon = Icons.Outlined.FavoriteBorder,
-        category = ToolCategory.MEDICAL,
+        category = ToolCategory.FITNESS,
         route = "tool_heart_rate",
     ),
     BODY_FAT_CALCULATOR(
         toolName = "Body Fat %",
         description = "Navy method estimate",
         icon = Icons.Outlined.Accessibility,
-        category = ToolCategory.MEDICAL,
+        category = ToolCategory.FITNESS,
         route = "tool_body_fat",
     ),
+    WATER_INTAKE(
+        toolName = "Water Intake",
+        description = "Daily hydration target",
+        icon = Icons.Outlined.LocalDrink,
+        category = ToolCategory.FITNESS,
+        route = "tool_water_intake",
+    ),
+    IDEAL_BODY_WEIGHT(
+        toolName = "Ideal Weight",
+        description = "Devine, Robinson & more",
+        icon = Icons.Outlined.Person,
+        category = ToolCategory.FITNESS,
+        route = "tool_ideal_weight",
+    ),
+    WORKOUT_TIMER(
+        toolName = "Workout Timer",
+        description = "HIIT, Tabata & custom intervals",
+        icon = Icons.Outlined.Alarm,
+        category = ToolCategory.FITNESS,
+        route = "tool_workout_timer",
+    ),
+    REP_COUNTER(
+        toolName = "Rep Counter",
+        description = "Track sets & reps",
+        icon = Icons.Outlined.FormatListNumbered,
+        category = ToolCategory.FITNESS,
+        route = "tool_rep_counter",
+    ),
+    ONE_REP_MAX(
+        toolName = "1RM Calculator",
+        description = "Estimate one-rep max",
+        icon = Icons.Outlined.FitnessCenter,
+        category = ToolCategory.FITNESS,
+        route = "tool_one_rep_max",
+    ),
+    PACE_CALCULATOR(
+        toolName = "Pace Calculator",
+        description = "Running pace & splits",
+        icon = Icons.Outlined.DirectionsRun,
+        category = ToolCategory.FITNESS,
+        route = "tool_pace_calculator",
+    ),
+    SPLIT_TIMER(
+        toolName = "Split Timer",
+        description = "Lap times & intervals",
+        icon = Icons.Outlined.TimerOff,
+        category = ToolCategory.FITNESS,
+        route = "tool_split_timer",
+    ),
+
+    // ── Medical ──
     BAC_CALCULATOR(
         toolName = "BAC Calculator",
         description = "Blood alcohol estimate",
@@ -436,19 +487,5 @@ enum class ToolId(
         icon = Icons.Outlined.Opacity,
         category = ToolCategory.MEDICAL,
         route = "tool_iv_drip",
-    ),
-    WATER_INTAKE(
-        toolName = "Water Intake",
-        description = "Daily hydration target",
-        icon = Icons.Outlined.LocalDrink,
-        category = ToolCategory.MEDICAL,
-        route = "tool_water_intake",
-    ),
-    IDEAL_BODY_WEIGHT(
-        toolName = "Ideal Weight",
-        description = "Devine, Robinson & more",
-        icon = Icons.Outlined.Person,
-        category = ToolCategory.MEDICAL,
-        route = "tool_ideal_weight",
     ),
 }

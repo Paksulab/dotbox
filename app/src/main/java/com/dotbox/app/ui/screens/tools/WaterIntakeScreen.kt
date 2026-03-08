@@ -29,7 +29,7 @@ fun WaterIntakeScreen(onBack: () -> Unit) {
     ToolScreenScaffold(
         title = "Water Intake Calculator",
         onBack = onBack
-    ) {
+    ) { paddingValues ->
         val scrollState = rememberScrollState()
 
         var weightInput by rememberSaveable { mutableStateOf("") }
@@ -70,6 +70,7 @@ fun WaterIntakeScreen(onBack: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .verticalScroll(scrollState)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)

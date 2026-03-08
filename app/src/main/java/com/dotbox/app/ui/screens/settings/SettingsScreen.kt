@@ -39,33 +39,34 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dotbox.app.BuildConfig
 import com.dotbox.app.data.model.ToolCategory
+import com.dotbox.app.data.model.ToolId
+import com.dotbox.app.data.preferences.AppPreferences
 import com.dotbox.app.ui.components.ToolScreenScaffold
 import com.dotbox.app.ui.theme.JetBrainsMono
 
-private const val PREFS_NAME = "dotbox_settings"
-private const val KEY_THEME = "theme_mode"
-private const val KEY_GRID_COLUMNS = "grid_columns"
-private const val KEY_HAPTIC_FEEDBACK = "haptic_feedback"
-private const val KEY_DEFAULT_CATEGORY = "default_category"
-private const val KEY_TWO_PANE = "two_pane_layout"
-
 // ── Persistence helpers ─────────────────────────────────────────────────────
 
-private fun prefs(context: Context) =
-    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
 private fun loadString(context: Context, key: String, default: String): String =
-    prefs(context).getString(key, default) ?: default
+    AppPreferences.get(context).getString(key, default) ?: default
 
 private fun saveString(context: Context, key: String, value: String) =
-    prefs(context).edit().putString(key, value).apply()
+    AppPreferences.get(context).edit().putString(key, value).apply()
 
 private fun loadBoolean(context: Context, key: String, default: Boolean): Boolean =
-    prefs(context).getBoolean(key, default)
+    AppPreferences.get(context).getBoolean(key, default)
 
 private fun saveBoolean(context: Context, key: String, value: Boolean) =
-    prefs(context).edit().putBoolean(key, value).apply()
+    AppPreferences.get(context).edit().putBoolean(key, value).apply()
+
+// ── Public helpers ──────────────────────────────────────────────────────────
+
+fun animationsEnabled(context: Context): Boolean =
+    loadBoolean(context, AppPreferences.KEY_ANIMATIONS, true)
+
+fun hapticEnabled(context: Context): Boolean =
+    loadBoolean(context, AppPreferences.KEY_HAPTIC_FEEDBACK, true)
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 
@@ -74,11 +75,12 @@ private fun saveBoolean(context: Context, key: String, value: Boolean) =
 fun SettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
 
-    var themeMode by remember { mutableStateOf(loadString(context, KEY_THEME, "dark")) }
-    var gridColumns by remember { mutableStateOf(loadString(context, KEY_GRID_COLUMNS, "auto")) }
-    var hapticFeedback by remember { mutableStateOf(loadBoolean(context, KEY_HAPTIC_FEEDBACK, true)) }
-    var defaultCategory by remember { mutableStateOf(loadString(context, KEY_DEFAULT_CATEGORY, "all")) }
-    var twoPaneLayout by remember { mutableStateOf(loadBoolean(context, KEY_TWO_PANE, false)) }
+    var themeMode by remember { mutableStateOf(loadString(context, AppPreferences.KEY_THEME, "dark")) }
+    var gridColumns by remember { mutableStateOf(loadString(context, AppPreferences.KEY_GRID_COLUMNS, "auto")) }
+    var hapticFeedback by remember { mutableStateOf(loadBoolean(context, AppPreferences.KEY_HAPTIC_FEEDBACK, true)) }
+    var defaultCategory by remember { mutableStateOf(loadString(context, AppPreferences.KEY_DEFAULT_CATEGORY, "all")) }
+    var twoPaneLayout by remember { mutableStateOf(loadBoolean(context, AppPreferences.KEY_TWO_PANE, false)) }
+    var animationsEnabled by remember { mutableStateOf(loadBoolean(context, AppPreferences.KEY_ANIMATIONS, true)) }
 
     ToolScreenScaffold(
         title = "Settings",
@@ -108,7 +110,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         selected = themeMode,
                         onSelect = {
                             themeMode = it
-                            saveString(context, KEY_THEME, it)
+                            saveString(context, AppPreferences.KEY_THEME, it)
                         }
                     )
 
@@ -128,7 +130,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         selected = gridColumns,
                         onSelect = {
                             gridColumns = it
-                            saveString(context, KEY_GRID_COLUMNS, it)
+                            saveString(context, AppPreferences.KEY_GRID_COLUMNS, it)
                         }
                     )
                 }
@@ -156,7 +158,38 @@ fun SettingsScreen(onBack: () -> Unit) {
                             checked = hapticFeedback,
                             onCheckedChange = {
                                 hapticFeedback = it
-                                saveBoolean(context, KEY_HAPTIC_FEEDBACK, it)
+                                saveBoolean(context, AppPreferences.KEY_HAPTIC_FEEDBACK, it)
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.tertiary,
+                                checkedThumbColor = MaterialTheme.colorScheme.onTertiary
+                            )
+                        )
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                    )
+
+                    // Animations
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            SettingLabel(
+                                title = "Animations",
+                                description = "Enable animations for tool interactions"
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Switch(
+                            checked = animationsEnabled,
+                            onCheckedChange = {
+                                animationsEnabled = it
+                                saveBoolean(context, AppPreferences.KEY_ANIMATIONS, it)
                             },
                             colors = SwitchDefaults.colors(
                                 checkedTrackColor = MaterialTheme.colorScheme.tertiary,
@@ -180,7 +213,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         selectedKey = defaultCategory,
                         onSelect = {
                             defaultCategory = it
-                            saveString(context, KEY_DEFAULT_CATEGORY, it)
+                            saveString(context, AppPreferences.KEY_DEFAULT_CATEGORY, it)
                         }
                     )
 
@@ -206,7 +239,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                             checked = twoPaneLayout,
                             onCheckedChange = {
                                 twoPaneLayout = it
-                                saveBoolean(context, KEY_TWO_PANE, it)
+                                saveBoolean(context, AppPreferences.KEY_TWO_PANE, it)
                             },
                             colors = SwitchDefaults.colors(
                                 checkedTrackColor = MaterialTheme.colorScheme.tertiary,
@@ -234,7 +267,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "v1.2.0",
+                            text = "v${BuildConfig.VERSION_NAME}",
                             style = MaterialTheme.typography.bodyMedium,
                             fontFamily = JetBrainsMono,
                             color = MaterialTheme.colorScheme.tertiary
@@ -248,7 +281,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "51 tools · 7 categories",
+                        text = "${ToolId.entries.size} tools · ${ToolCategory.entries.size} categories",
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = JetBrainsMono,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)

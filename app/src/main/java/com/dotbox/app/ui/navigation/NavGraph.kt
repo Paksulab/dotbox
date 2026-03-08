@@ -53,6 +53,11 @@ import com.dotbox.app.ui.screens.tools.DoseCalculatorScreen
 import com.dotbox.app.ui.screens.tools.IVDripRateScreen
 import com.dotbox.app.ui.screens.tools.WaterIntakeScreen
 import com.dotbox.app.ui.screens.tools.IdealBodyWeightScreen
+import com.dotbox.app.ui.screens.tools.WorkoutTimerScreen
+import com.dotbox.app.ui.screens.tools.RepCounterScreen
+import com.dotbox.app.ui.screens.tools.OneRepMaxScreen
+import com.dotbox.app.ui.screens.tools.PaceCalculatorScreen
+import com.dotbox.app.ui.screens.tools.SplitTimerScreen
 import com.dotbox.app.ui.screens.tools.HabitTrackerScreen
 import com.dotbox.app.ui.screens.tools.PomodoroTimerScreen
 import com.dotbox.app.ui.screens.tools.CounterScreen
@@ -63,7 +68,6 @@ import com.dotbox.app.ui.screens.tools.CookingConverterScreen
 import com.dotbox.app.ui.screens.tools.ClothingSizeScreen
 import com.dotbox.app.ui.screens.tools.MorseCodeScreen
 import com.dotbox.app.ui.screens.tools.FrequencyGeneratorScreen
-import com.dotbox.app.ui.screens.tools.WhiteNoiseScreen
 import com.dotbox.app.ui.screens.tools.WifiQRScreen
 import com.dotbox.app.ui.screens.tools.CameraColorPickerScreen
 import com.dotbox.app.ui.screens.onboarding.OnboardingScreen
@@ -257,9 +261,6 @@ fun DotBoxNavGraph(
         composable(ToolId.FREQUENCY_GENERATOR.route) {
             FrequencyGeneratorScreen(onBack = { navController.popBackStack() })
         }
-        composable(ToolId.WHITE_NOISE.route) {
-            WhiteNoiseScreen(onBack = { navController.popBackStack() })
-        }
         composable(ToolId.WIFI_QR.route) {
             WifiQRScreen(onBack = { navController.popBackStack() })
         }
@@ -275,7 +276,7 @@ fun DotBoxNavGraph(
             DocumentScannerScreen(onBack = { navController.popBackStack() })
         }
 
-        // ── Medical ──
+        // ── Fitness ──
         composable(ToolId.BMI_CALCULATOR.route) {
             BMICalculatorScreen(onBack = { navController.popBackStack() })
         }
@@ -288,6 +289,29 @@ fun DotBoxNavGraph(
         composable(ToolId.BODY_FAT_CALCULATOR.route) {
             BodyFatCalculatorScreen(onBack = { navController.popBackStack() })
         }
+        composable(ToolId.WATER_INTAKE.route) {
+            WaterIntakeScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.IDEAL_BODY_WEIGHT.route) {
+            IdealBodyWeightScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.WORKOUT_TIMER.route) {
+            WorkoutTimerScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.REP_COUNTER.route) {
+            RepCounterScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.ONE_REP_MAX.route) {
+            OneRepMaxScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.PACE_CALCULATOR.route) {
+            PaceCalculatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(ToolId.SPLIT_TIMER.route) {
+            SplitTimerScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ── Medical ──
         composable(ToolId.BAC_CALCULATOR.route) {
             BACCalculatorScreen(onBack = { navController.popBackStack() })
         }
@@ -299,12 +323,6 @@ fun DotBoxNavGraph(
         }
         composable(ToolId.IV_DRIP_RATE.route) {
             IVDripRateScreen(onBack = { navController.popBackStack() })
-        }
-        composable(ToolId.WATER_INTAKE.route) {
-            WaterIntakeScreen(onBack = { navController.popBackStack() })
-        }
-        composable(ToolId.IDEAL_BODY_WEIGHT.route) {
-            IdealBodyWeightScreen(onBack = { navController.popBackStack() })
         }
     }
 }

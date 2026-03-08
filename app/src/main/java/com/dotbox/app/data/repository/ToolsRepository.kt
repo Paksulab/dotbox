@@ -2,6 +2,7 @@ package com.dotbox.app.data.repository
 
 import android.content.Context
 import com.dotbox.app.data.local.FavoriteDao
+import com.dotbox.app.data.preferences.AppPreferences
 import com.dotbox.app.data.local.FavoriteEntity
 import com.dotbox.app.data.model.ToolCategory
 import com.dotbox.app.data.model.ToolId
@@ -53,17 +54,11 @@ class ToolsRepository(
         syncWidgetFavorites()
     }
 
-    suspend fun reorderFavorites(fromIndex: Int, toIndex: Int) {
-        val currentFavorites = favoriteDao.getAllFavoritesSnapshot().toMutableList()
-        if (fromIndex < 0 || fromIndex >= currentFavorites.size) return
-        if (toIndex < 0 || toIndex >= currentFavorites.size) return
-
-        val item = currentFavorites.removeAt(fromIndex)
-        currentFavorites.add(toIndex, item)
-
-        currentFavorites.forEachIndexed { index, entity ->
-            favoriteDao.updateOrder(entity.toolId, index)
+    suspend fun setFavoriteOrder(orderedTools: List<ToolId>) {
+        val orders = orderedTools.mapIndexed { index, toolId ->
+            toolId.name to index
         }
+        favoriteDao.updateAllOrders(orders)
         syncWidgetFavorites()
     }
 
@@ -73,9 +68,8 @@ class ToolsRepository(
         val topFavs = favoriteDao.getAllFavoritesSnapshot()
             .take(4)
             .joinToString(",") { it.toolId }
-        ctx.getSharedPreferences("dotbox_settings", Context.MODE_PRIVATE)
-            .edit()
-            .putString("widget_favorites", topFavs)
+        AppPreferences.get(ctx).edit()
+            .putString(AppPreferences.KEY_WIDGET_FAVORITES, topFavs)
             .apply()
     }
 }

@@ -2,16 +2,26 @@ package com.dotbox.app.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.dotbox.app.R
 
-// Nothing-inspired: clean geometric sans-serif
-// Using system fonts for maximum reliability and zero-latency rendering.
-// SansSerif maps well to Roboto/Google Sans on Pixel devices.
-// Monospace gives the technical dot-matrix aesthetic.
-val SpaceGrotesk = FontFamily.SansSerif
-val JetBrainsMono = FontFamily.Monospace
+// Actual Space Grotesk — geometric sans-serif matching the dotBox website
+val SpaceGrotesk = FontFamily(
+    Font(R.font.space_grotesk_regular, FontWeight.Normal),
+    Font(R.font.space_grotesk_medium, FontWeight.Medium),
+    Font(R.font.space_grotesk_semibold, FontWeight.SemiBold),
+    Font(R.font.space_grotesk_bold, FontWeight.Bold),
+)
+
+// Actual JetBrains Mono — developer monospace for technical labels & branding
+val JetBrainsMono = FontFamily(
+    Font(R.font.jetbrains_mono_regular, FontWeight.Normal),
+    Font(R.font.jetbrains_mono_medium, FontWeight.Medium),
+    Font(R.font.jetbrains_mono_bold, FontWeight.Bold),
+)
 
 val DotBoxTypography = Typography(
     displayLarge = TextStyle(
@@ -99,18 +109,19 @@ val DotBoxTypography = Typography(
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp,
     ),
+    // Kicker / section label style — matches website's JetBrains Mono with wide tracking
     labelMedium = TextStyle(
         fontFamily = JetBrainsMono,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.5.sp,
+        letterSpacing = 1.2.sp, // wider — matches website's 0.09em kicker style
     ),
     labelSmall = TextStyle(
         fontFamily = JetBrainsMono,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.5.sp,
+        letterSpacing = 0.8.sp, // wider — matches website's technical label style
     ),
 )

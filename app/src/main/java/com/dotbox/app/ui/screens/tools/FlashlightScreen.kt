@@ -3,9 +3,16 @@ package com.dotbox.app.ui.screens.tools
 import android.content.Context
 import android.hardware.camera2.CameraManager
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,8 +45,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.dotbox.app.ui.components.ToolScreenScaffold
+import com.dotbox.app.ui.screens.settings.animationsEnabled
 import com.dotbox.app.ui.theme.NothingRed
 import kotlinx.coroutines.delay
 
@@ -52,6 +61,7 @@ private enum class FlashMode(val label: String) {
 @Composable
 fun FlashlightScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val animEnabled = animationsEnabled(context)
     var isOn by rememberSaveable { mutableStateOf(false) }
     var mode by rememberSaveable { mutableIntStateOf(0) }
     val currentMode = FlashMode.entries[mode]
@@ -121,6 +131,23 @@ fun FlashlightScreen(onBack: () -> Unit) {
         label = "flashColor",
     )
 
+    val glowTransition = rememberInfiniteTransition(label = "flashGlow")
+    val glowAlpha by glowTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = when (currentMode) {
+                    FlashMode.STEADY -> 2000
+                    FlashMode.STROBE -> 100
+                    FlashMode.SOS -> 600
+                }
+            ),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "glowAlpha",
+    )
+
     ToolScreenScaffold(title = "Flashlight", onBack = onBack) { paddingValues ->
         Column(
             modifier = Modifier
@@ -146,19 +173,39 @@ fun FlashlightScreen(onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Big toggle button
-            LargeFloatingActionButton(
-                onClick = { isOn = !isOn },
-                shape = CircleShape,
-                containerColor = buttonColor,
-                contentColor = if (isOn) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(120.dp),
-            ) {
-                Icon(
-                    imageVector = if (isOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
-                    contentDescription = if (isOn) "Turn off" else "Turn on",
-                    modifier = Modifier.size(48.dp),
-                )
+            // Big toggle button with glow
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
+                // Radial glow behind button
+                if (isOn && animEnabled) {
+                    val glowColor = NothingRed
+                    Canvas(modifier = Modifier.size(200.dp)) {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    glowColor.copy(alpha = glowAlpha * 0.6f),
+                                    glowColor.copy(alpha = glowAlpha * 0.2f),
+                                    glowColor.copy(alpha = 0f),
+                                ),
+                                center = center,
+                                radius = size.minDimension / 2,
+                            ),
+                        )
+                    }
+                }
+
+                LargeFloatingActionButton(
+                    onClick = { isOn = !isOn },
+                    shape = CircleShape,
+                    containerColor = buttonColor,
+                    contentColor = if (isOn) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(120.dp),
+                ) {
+                    Icon(
+                        imageVector = if (isOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
+                        contentDescription = if (isOn) "Turn off" else "Turn on",
+                        modifier = Modifier.size(48.dp),
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(48.dp))

@@ -1,9 +1,22 @@
 package com.dotbox.app.ui.screens.tools
 
+import android.Manifest
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +40,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,7 +62,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import com.dotbox.app.DotBoxApplication
+import com.dotbox.app.MainActivity
+import com.dotbox.app.R
+import com.dotbox.app.data.preferences.AppPreferences
 import com.dotbox.app.ui.components.ToolScreenScaffold
+import com.dotbox.app.ui.screens.settings.animationsEnabled
 import com.dotbox.app.ui.theme.JetBrainsMono
 import kotlinx.coroutines.delay
 
@@ -63,17 +85,49 @@ private fun vibrateCompletion(context: Context) {
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         vibrator.vibrate(
-            VibrationEffect.createWaveform(longArrayOf(0, 200, 100, 200, 100, 400), -1)
+            VibrationEffect.createWaveform(longArrayOf(0, 200, 100, 200, 100, 400), -1),
         )
     } else {
         vibrator.vibrate(longArrayOf(0, 200, 100, 200, 100, 400), -1)
     }
 }
 
+private fun sendPomodoroNotification(context: Context, title: String, body: String) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+        != PackageManager.PERMISSION_GRANTED
+    ) {
+        return
+    }
+
+    val intent = Intent(context, MainActivity::class.java).apply {
+        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+    }
+    val pendingIntent = PendingIntent.getActivity(
+        context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    val notification = NotificationCompat.Builder(context, DotBoxApplication.CHANNEL_POMODORO)
+        .setSmallIcon(R.drawable.ic_launcher_foreground)
+        .setContentTitle(title)
+        .setContentText(body)
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setAutoCancel(true)
+        .setContentIntent(pendingIntent)
+        .build()
+
+    NotificationManagerCompat.from(context).notify(
+        System.currentTimeMillis().toInt(),
+        notification,
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PomodoroTimerScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val animEnabled = animationsEnabled(context)
+    val prefs = AppPreferences.get(context)
 
     var selectedMode by rememberSaveable { mutableStateOf(PomodoroMode.FOCUS) }
     var timeRemainingSeconds by rememberSaveable {
@@ -83,8 +137,37 @@ fun PomodoroTimerScreen(onBack: () -> Unit) {
     var completedSessions by rememberSaveable { mutableIntStateOf(0) }
     var currentSession by rememberSaveable { mutableIntStateOf(1) }
 
+    // Auto-continue: persisted preference
+    var autoStart by rememberSaveable {
+        mutableStateOf(prefs.getBoolean(AppPreferences.KEY_POMODORO_AUTO_START, false))
+    }
+
+    // Notification permission launcher (Android 13+)
+    var hasNotificationPermission by rememberSaveable {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.POST_NOTIFICATIONS,
+                ) == PackageManager.PERMISSION_GRANTED,
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> hasNotificationPermission = granted }
+
+    fun requestNotificationPermissionIfNeeded() {
+        if (!hasNotificationPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     val totalSeconds = selectedMode.durationMinutes * 60
     val progress = if (totalSeconds > 0) timeRemainingSeconds.toFloat() / totalSeconds else 0f
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(300),
+        label = "pomodoroProgress",
+    )
 
     val breakGreen = Color(0xFF66BB6A)
     val arcColor = when (selectedMode) {
@@ -99,15 +182,21 @@ fun PomodoroTimerScreen(onBack: () -> Unit) {
             timeRemainingSeconds -= 1
         } else if (isRunning && timeRemainingSeconds == 0) {
             // Timer completed
-            isRunning = false
             vibrateCompletion(context)
+
+            // Send notification
+            val (notifTitle, notifBody) = when (selectedMode) {
+                PomodoroMode.FOCUS -> "Focus Complete!" to "Great work! Time for a break."
+                PomodoroMode.SHORT_BREAK -> "Break Over!" to "Ready to focus again."
+                PomodoroMode.LONG_BREAK -> "Long Break Over!" to "Start a new Pomodoro cycle."
+            }
+            sendPomodoroNotification(context, notifTitle, notifBody)
 
             // Auto-advance logic
             when (selectedMode) {
                 PomodoroMode.FOCUS -> {
                     completedSessions += 1
                     if (completedSessions % 4 == 0) {
-                        // Every 4th focus session -> long break
                         selectedMode = PomodoroMode.LONG_BREAK
                         timeRemainingSeconds = PomodoroMode.LONG_BREAK.durationMinutes * 60
                     } else {
@@ -121,6 +210,9 @@ fun PomodoroTimerScreen(onBack: () -> Unit) {
                     timeRemainingSeconds = PomodoroMode.FOCUS.durationMinutes * 60
                 }
             }
+
+            // Auto-continue: keep running or stop
+            isRunning = autoStart
         }
     }
 
@@ -189,14 +281,30 @@ fun PomodoroTimerScreen(onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Completion pulse setup (called unconditionally)
+            val showCompletionPulse =
+                !isRunning && timeRemainingSeconds == 0 && completedSessions > 0
+            val pulseTransition = rememberInfiniteTransition(label = "completionPulse")
+            val pulseScale by pulseTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.15f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(600),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "pulseScale",
+            )
+
             // Circular timer gauge
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(180.dp)) {
                 val bgArcColor = MaterialTheme.colorScheme.outline
 
                 Canvas(modifier = Modifier.size(180.dp)) {
-                    val strokeWidth = 14.dp.toPx()
-                    val arcSize = size.width - strokeWidth
-                    val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
+                    val baseStrokeWidth = 14.dp.toPx()
+                    val effectiveStrokeWidth =
+                        baseStrokeWidth * (if (showCompletionPulse && animEnabled) pulseScale else 1f)
+                    val arcSize = size.width - effectiveStrokeWidth
+                    val topLeft = Offset(effectiveStrokeWidth / 2, effectiveStrokeWidth / 2)
 
                     // Background arc
                     drawArc(
@@ -206,17 +314,17 @@ fun PomodoroTimerScreen(onBack: () -> Unit) {
                         useCenter = false,
                         topLeft = topLeft,
                         size = Size(arcSize, arcSize),
-                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        style = Stroke(width = effectiveStrokeWidth, cap = StrokeCap.Round),
                     )
                     // Progress arc
                     drawArc(
                         color = arcColor,
                         startAngle = 135f,
-                        sweepAngle = 270f * progress,
+                        sweepAngle = 270f * (if (animEnabled) animatedProgress else progress),
                         useCenter = false,
                         topLeft = topLeft,
                         size = Size(arcSize, arcSize),
-                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        style = Stroke(width = effectiveStrokeWidth, cap = StrokeCap.Round),
                     )
                 }
 
@@ -287,10 +395,11 @@ fun PomodoroTimerScreen(onBack: () -> Unit) {
                 Button(
                     onClick = {
                         if (timeRemainingSeconds == 0) {
-                            // Reset if at zero before starting
                             timeRemainingSeconds = selectedMode.durationMinutes * 60
                         }
                         isRunning = !isRunning
+                        // Request notification permission on first start
+                        requestNotificationPermissionIfNeeded()
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = arcColor,
@@ -328,7 +437,50 @@ fun PomodoroTimerScreen(onBack: () -> Unit) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Auto-continue toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Auto-continue",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "Automatically start next session",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = autoStart,
+                    onCheckedChange = { enabled ->
+                        autoStart = enabled
+                        prefs.edit()
+                            .putBoolean(AppPreferences.KEY_POMODORO_AUTO_START, enabled)
+                            .apply()
+                        if (enabled) {
+                            requestNotificationPermissionIfNeeded()
+                        }
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onTertiary,
+                        checkedTrackColor = MaterialTheme.colorScheme.tertiary,
+                    ),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Info section
             Column(

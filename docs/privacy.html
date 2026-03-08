@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - dotBox</title>
+    <meta name="description" content="Privacy policy for the dotBox Android app.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #0A0A0A;
+            --dark-gray: #141414;
+            --card-gray: #1A1A1A;
+            --border-gray: #2A2A2A;
+            --medium-gray: #3A3A3A;
+            --light-gray: #8A8A8A;
+            --off-white: #E0E0E0;
+            --white: #F5F5F5;
+            --red: #D32F2F;
+        }
+
+        body {
+            background-color: var(--black);
+            color: var(--off-white);
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.7;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .nav-logo svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-logo span {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links a {
+            color: var(--light-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--white);
+        }
+
+        /* Content */
+        .content {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 8rem 2rem 4rem;
+        }
+
+        .content h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+            color: var(--medium-gray);
+            margin-bottom: 3rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .content h2 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--white);
+            margin-top: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--off-white);
+            font-size: 0.95rem;
+        }
+
+        .content ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .content li {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--off-white);
+        }
+
+        .highlight-box {
+            background: var(--card-gray);
+            border: 1px solid var(--border-gray);
+            border-left: 3px solid var(--red);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+            font-weight: 500;
+            color: var(--white);
+        }
+
+        a {
+            color: var(--red);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-gray);
+            padding: 2rem;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .footer-copy {
+            font-size: 0.8rem;
+            color: var(--medium-gray);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 6rem 1.5rem 3rem;
+            }
+
+            .content h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="/" class="nav-logo">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="25" cy="25" r="8" fill="#F5F5F5"/>
+                <circle cx="50" cy="25" r="8" fill="#F5F5F5"/>
+                <circle cx="75" cy="25" r="8" fill="#D32F2F"/>
+                <circle cx="25" cy="50" r="8" fill="#F5F5F5"/>
+                <circle cx="50" cy="50" r="10" fill="#D32F2F"/>
+                <circle cx="75" cy="50" r="8" fill="#F5F5F5"/>
+                <circle cx="25" cy="75" r="8" fill="#D32F2F"/>
+                <circle cx="50" cy="75" r="8" fill="#F5F5F5"/>
+                <circle cx="75" cy="75" r="8" fill="#F5F5F5"/>
+            </svg>
+            <span>dotBox</span>
+        </a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+        </div>
+    </nav>
+
+    <!-- Privacy Policy Content -->
+    <main class="content">
+        <h1>Privacy Policy</h1>
+        <p class="last-updated">Last updated: March 8, 2026</p>
+
+        <div class="highlight-box">
+            <p>dotBox does not collect, store, or transmit any personal data. Your privacy is fully respected.</p>
+        </div>
+
+        <h2>Overview</h2>
+        <p>dotBox is a utility toolkit app that runs entirely on your device. We believe your tools should work for you, not collect data about you. This privacy policy explains what data the app handles and how.</p>
+
+        <h2>Data Collection</h2>
+        <p>dotBox does <strong>not</strong> collect any personal information. Specifically:</p>
+        <ul>
+            <li>No account creation or login required</li>
+            <li>No analytics or tracking SDKs</li>
+            <li>No advertising</li>
+            <li>No data sent to remote servers (except currency exchange rates)</li>
+            <li>No cookies or fingerprinting</li>
+        </ul>
+
+        <h2>Local Data Storage</h2>
+        <p>dotBox stores the following data locally on your device using SharedPreferences and Room database:</p>
+        <ul>
+            <li><strong>Favorites:</strong> Your favorited tools and their order</li>
+            <li><strong>Settings:</strong> Your app preferences (theme, onboarding status)</li>
+            <li><strong>Tool state:</strong> Saved countdowns, timer preferences, and similar tool-specific settings</li>
+        </ul>
+        <p>This data never leaves your device and is deleted when you uninstall the app.</p>
+
+        <h2>Device Permissions</h2>
+        <p>dotBox requests the following permissions only when needed by specific tools:</p>
+        <ul>
+            <li><strong>Camera:</strong> Used by the QR Scanner and Document Scanner tools only</li>
+            <li><strong>Location:</strong> Used by the Compass tool for magnetic declination accuracy</li>
+            <li><strong>Microphone:</strong> Used by the Sound Meter tool only</li>
+            <li><strong>Flashlight:</strong> Used by the Flashlight tool only</li>
+            <li><strong>Internet:</strong> Used by the Currency Converter to fetch current exchange rates</li>
+            <li><strong>Notifications:</strong> Used by the Pomodoro Timer to notify when sessions finish</li>
+            <li><strong>Vibration:</strong> Used for haptic feedback in timer tools</li>
+        </ul>
+        <p>Permissions are requested at runtime and can be revoked at any time through your device settings. No permission is required to use the majority of tools.</p>
+
+        <h2>Network Usage</h2>
+        <p>The only network request dotBox makes is fetching currency exchange rates for the Currency Converter tool. This request goes to a public exchange rate API and does not include any personal or device information.</p>
+        <p>All other tools work completely offline.</p>
+
+        <h2>Third-Party Services</h2>
+        <p>dotBox uses the following third-party libraries, none of which collect personal data:</p>
+        <ul>
+            <li><strong>Google ML Kit:</strong> For barcode scanning and document scanning. Processing happens on-device; no images are sent to Google's servers.</li>
+            <li><strong>ZXing:</strong> For QR code generation. Runs entirely on-device.</li>
+        </ul>
+
+        <h2>Children's Privacy</h2>
+        <p>dotBox does not collect data from anyone, including children under 13. The app is safe for users of all ages.</p>
+
+        <h2>Changes to This Policy</h2>
+        <p>If we update this privacy policy, the changes will be posted on this page with an updated date. Since dotBox collects no data, changes are unlikely.</p>
+
+        <h2>Contact</h2>
+        <p>If you have questions about this privacy policy, you can reach us at:</p>
+        <p><a href="mailto:dotbox@example.com">dotbox@example.com</a></p>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p class="footer-copy">&copy; 2025 dotBox</p>
+    </footer>
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.dotbox.app.ui.screens.home
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -10,6 +11,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +31,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -51,24 +55,29 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dotbox.app.data.model.ToolCategory
 import com.dotbox.app.data.model.ToolId
+import com.dotbox.app.data.preferences.AppPreferences
 import com.dotbox.app.data.repository.ToolsRepository
 import com.dotbox.app.ui.components.DotPattern
 import com.dotbox.app.ui.components.ToolCard
 import com.dotbox.app.ui.theme.JetBrainsMono
-
-private const val PREFS_NAME = "dotbox_settings"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +91,7 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val categories = remember { ToolCategory.entries }
     val context = LocalContext.current
+    val view = LocalView.current
 
     // Wiggle animation for edit mode
     val infiniteTransition = rememberInfiniteTransition(label = "wiggle")
@@ -95,10 +105,24 @@ fun HomeScreen(
         label = "wiggleRotation",
     )
 
+    // Grid state for drag-to-reorder
+    val gridState = rememberLazyGridState()
+
+    // Drag state from ViewModel
+    val dragList by viewModel.dragList.collectAsStateWithLifecycle()
+    val draggedIndex by viewModel.draggedIndex.collectAsStateWithLifecycle()
+    val isDragging = draggedIndex != null
+
+    // Visual drag offset (pixels from resting position)
+    var dragOffset by remember { mutableStateOf(Offset.Zero) }
+
+    // The list to display: drag override or DB-backed
+    val displayFavorites = dragList ?: uiState.favoriteToolsOrdered
+
     // Read grid columns preference
     val gridCells = remember {
-        val pref = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
-            .getString("grid_columns", "auto") ?: "auto"
+        val pref = AppPreferences.get(context)
+            .getString(AppPreferences.KEY_GRID_COLUMNS, "auto") ?: "auto"
         when (pref) {
             "2" -> GridCells.Fixed(2)
             "3" -> GridCells.Fixed(3)
@@ -109,8 +133,8 @@ fun HomeScreen(
 
     // Apply default category on first launch
     LaunchedEffect(Unit) {
-        val pref = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
-            .getString("default_category", "all") ?: "all"
+        val pref = AppPreferences.get(context)
+            .getString(AppPreferences.KEY_DEFAULT_CATEGORY, "all") ?: "all"
         if (pref != "all") {
             val category = ToolCategory.entries.find { it.name == pref }
             if (category != null) {
@@ -178,13 +202,19 @@ fun HomeScreen(
                     if (uiState.isEditMode) {
                         Button(
                             onClick = { viewModel.exitEditMode() },
-                            shape = RoundedCornerShape(12.dp),
+                            // Website: border-radius 14px
+                            shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.tertiary,
                                 contentColor = MaterialTheme.colorScheme.onTertiary,
                             ),
+                            // Website: border 1px solid #ff7676 (lighter accent border)
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f),
+                            ),
                         ) {
-                            Text("Done")
+                            Text("Done", fontWeight = FontWeight.Medium)
                         }
                     } else {
                         IconButton(
@@ -241,17 +271,23 @@ fun HomeScreen(
                                 label = {
                                     Text(
                                         text = category.displayName,
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MaterialTheme.typography.bodyMedium,
                                     )
                                 },
-                                shape = RoundedCornerShape(12.dp),
+                                // Website: border-radius 999px (fully rounded pill)
+                                shape = RoundedCornerShape(50),
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = category.accentColor.copy(alpha = 0.2f),
+                                    // Website: unselected bg rgba(245,245,245,0.03)
+                                    containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.03f),
+                                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    // Website: selected bg uses category color at ~15%
+                                    selectedContainerColor = category.accentColor.copy(alpha = 0.12f),
                                     selectedLabelColor = category.accentColor,
                                 ),
                                 border = FilterChipDefaults.filterChipBorder(
-                                    borderColor = MaterialTheme.colorScheme.outline,
-                                    selectedBorderColor = category.accentColor.copy(alpha = 0.5f),
+                                    // Website: border 1px solid rgba(224,224,224,0.2)
+                                    borderColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.12f),
+                                    selectedBorderColor = category.accentColor.copy(alpha = 0.35f),
                                     enabled = true,
                                     selected = uiState.selectedCategory == category,
                                 ),
@@ -263,14 +299,15 @@ fun HomeScreen(
                 // ── Scrollable tool grid ─────────────────────────────
                 LazyVerticalGrid(
                     columns = gridCells,
+                    state = gridState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
+                    userScrollEnabled = !isDragging,
                 ) {
                     // Favorites section
-                    val favoriteTools = uiState.favoriteToolsOrdered
-                    if (favoriteTools.isNotEmpty() && !uiState.isSearchActive && uiState.selectedCategory == null) {
+                    if (displayFavorites.isNotEmpty() && !uiState.isSearchActive && uiState.selectedCategory == null) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -284,7 +321,9 @@ fun HomeScreen(
                                 )
                             }
                         }
-                        itemsIndexed(favoriteTools, key = { _, tool -> "fav_${tool.name}" }) { index, tool ->
+                        itemsIndexed(displayFavorites, key = { _, tool -> "fav_${tool.name}" }) { index, tool ->
+                            val isBeingDragged = draggedIndex == index
+
                             ToolCard(
                                 tool = tool,
                                 isFavorite = true,
@@ -292,21 +331,106 @@ fun HomeScreen(
                                     if (!uiState.isEditMode) onToolClick(tool)
                                 },
                                 onFavoriteToggle = { viewModel.toggleFavorite(tool) },
-                                modifier = Modifier.graphicsLayer {
-                                    if (uiState.isEditMode) {
-                                        rotationZ = wiggleAngle * if (index % 2 == 0) 1f else -1f
+                                modifier = Modifier
+                                    .zIndex(if (isBeingDragged) 1f else 0f)
+                                    .then(
+                                        if (uiState.isEditMode) {
+                                            Modifier.pointerInput(Unit) {
+                                                detectDragGesturesAfterLongPress(
+                                                    onDragStart = {
+                                                        viewModel.startDrag(index)
+                                                        dragOffset = Offset.Zero
+                                                        view.performHapticFeedback(
+                                                            HapticFeedbackConstants.LONG_PRESS,
+                                                        )
+                                                    },
+                                                    onDrag = { change, dragAmount ->
+                                                        change.consume()
+                                                        dragOffset += Offset(dragAmount.x, dragAmount.y)
+
+                                                        // Find which grid cell the dragged item's center is over
+                                                        val currentDragIdx = viewModel.draggedIndex.value
+                                                            ?: return@detectDragGesturesAfterLongPress
+
+                                                        val draggedItemInfo = gridState.layoutInfo.visibleItemsInfo
+                                                            .find { it.key == "fav_${tool.name}" }
+                                                            ?: return@detectDragGesturesAfterLongPress
+
+                                                        val centerX = draggedItemInfo.offset.x +
+                                                            draggedItemInfo.size.width / 2 + dragOffset.x
+                                                        val centerY = draggedItemInfo.offset.y +
+                                                            draggedItemInfo.size.height / 2 + dragOffset.y
+
+                                                        // Find target item under the center point
+                                                        val targetItem = gridState.layoutInfo.visibleItemsInfo
+                                                            .firstOrNull { itemInfo ->
+                                                                val key = itemInfo.key as? String
+                                                                    ?: return@firstOrNull false
+                                                                if (!key.startsWith("fav_")) return@firstOrNull false
+                                                                if (key == "fav_${tool.name}") return@firstOrNull false
+                                                                centerX >= itemInfo.offset.x &&
+                                                                    centerX <= itemInfo.offset.x + itemInfo.size.width &&
+                                                                    centerY >= itemInfo.offset.y &&
+                                                                    centerY <= itemInfo.offset.y + itemInfo.size.height
+                                                            }
+
+                                                        if (targetItem != null) {
+                                                            // Calculate the favorite index from grid index
+                                                            // The "FAVORITES" header is at grid index 0,
+                                                            // so favorite items start at grid index 1
+                                                            val headerOffset = 1
+                                                            val targetFavIndex = targetItem.index - headerOffset
+                                                            val currentList = viewModel.dragList.value
+                                                                ?: return@detectDragGesturesAfterLongPress
+                                                            if (targetFavIndex in currentList.indices &&
+                                                                targetFavIndex != currentDragIdx
+                                                            ) {
+                                                                viewModel.moveDragItem(currentDragIdx, targetFavIndex)
+                                                                // Reset offset: item slot moved to new position
+                                                                dragOffset = Offset.Zero
+                                                                view.performHapticFeedback(
+                                                                    HapticFeedbackConstants.CLOCK_TICK,
+                                                                )
+                                                            }
+                                                        }
+                                                    },
+                                                    onDragEnd = {
+                                                        dragOffset = Offset.Zero
+                                                        viewModel.endDrag()
+                                                    },
+                                                    onDragCancel = {
+                                                        dragOffset = Offset.Zero
+                                                        viewModel.cancelDrag()
+                                                    },
+                                                )
+                                            }
+                                        } else {
+                                            Modifier
+                                        },
+                                    )
+                                    .graphicsLayer {
+                                        if (uiState.isEditMode) {
+                                            if (isBeingDragged) {
+                                                // Dragged item: follow finger, scale up, elevate
+                                                translationX = dragOffset.x
+                                                translationY = dragOffset.y
+                                                scaleX = 1.08f
+                                                scaleY = 1.08f
+                                                shadowElevation = 12f
+                                                rotationZ = 0f // stop wiggle
+                                            } else {
+                                                // Non-dragged: wiggle
+                                                rotationZ = wiggleAngle * if (index % 2 == 0) 1f else -1f
+                                            }
+                                        }
                                     }
-                                },
+                                    .animateItem(),
                                 isEditMode = uiState.isEditMode,
-                                onLongClick = {
-                                    if (!uiState.isEditMode) viewModel.toggleEditMode()
+                                onLongClick = if (!uiState.isEditMode) {
+                                    { viewModel.toggleEditMode() }
+                                } else {
+                                    null
                                 },
-                                onMoveUp = if (uiState.isEditMode && index > 0) {
-                                    { viewModel.reorderFavorites(index, index - 1) }
-                                } else null,
-                                onMoveDown = if (uiState.isEditMode && index < favoriteTools.size - 1) {
-                                    { viewModel.reorderFavorites(index, index + 1) }
-                                } else null,
                             )
                         }
                     }

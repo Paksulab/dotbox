@@ -2,9 +2,16 @@ package com.dotbox.app.ui.screens.tools
 
 import android.content.Context
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,6 +64,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dotbox.app.ui.components.ToolScreenScaffold
+import com.dotbox.app.ui.screens.settings.animationsEnabled
 import com.dotbox.app.ui.theme.JetBrainsMono
 import org.json.JSONArray
 import org.json.JSONObject
@@ -111,6 +119,7 @@ private fun loadCounters(context: Context): List<CounterItem> {
 @Composable
 fun CounterScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val animEnabled = animationsEnabled(context)
     val counters = remember { mutableStateListOf<CounterItem>() }
     var newCounterName by remember { mutableStateOf("") }
     var isLoaded by remember { mutableStateOf(false) }
@@ -229,6 +238,7 @@ fun CounterScreen(onBack: () -> Unit) {
                     ) { counter ->
                         CounterCard(
                             counter = counter,
+                            animEnabled = animEnabled,
                             onIncrement = {
                                 val index = counters.indexOfFirst { it.id == counter.id }
                                 if (index >= 0) {
@@ -275,9 +285,11 @@ fun CounterScreen(onBack: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun CounterCard(
     counter: CounterItem,
+    animEnabled: Boolean,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onReset: () -> Unit,
@@ -378,15 +390,36 @@ private fun CounterCard(
             }
 
             // Count display
-            Text(
-                text = "${counter.count}",
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontFamily = JetBrainsMono,
-                ),
-                color = MaterialTheme.colorScheme.tertiary,
-                textAlign = TextAlign.Center,
+            AnimatedContent(
+                targetState = counter.count,
+                transitionSpec = {
+                    if (animEnabled) {
+                        if (targetState > initialState) {
+                            (slideInVertically { -it } + fadeIn()) togetherWith
+                                (slideOutVertically { it } + fadeOut())
+                        } else {
+                            (slideInVertically { it } + fadeIn()) togetherWith
+                                (slideOutVertically { -it } + fadeOut())
+                        }
+                    } else {
+                        ContentTransform(
+                            targetContentEnter = fadeIn(snap()),
+                            initialContentExit = fadeOut(snap()),
+                        )
+                    }
+                },
+                label = "counterValue",
                 modifier = Modifier.weight(1f),
-            )
+            ) { count ->
+                Text(
+                    text = "$count",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontFamily = JetBrainsMono,
+                    ),
+                    color = MaterialTheme.colorScheme.tertiary,
+                    textAlign = TextAlign.Center,
+                )
+            }
 
             // Increment button (filled)
             Button(

@@ -1,5 +1,7 @@
 package com.dotbox.app.ui.screens.tools
 
+import android.view.HapticFeedbackConstants
+import android.view.View
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,9 +25,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dotbox.app.ui.components.ToolScreenScaffold
+import com.dotbox.app.ui.screens.settings.hapticEnabled
 import com.dotbox.app.ui.theme.JetBrainsMono
 import com.dotbox.app.ui.theme.NothingRed
 import java.text.DecimalFormat
@@ -38,6 +43,9 @@ import kotlin.math.tan
 
 @Composable
 fun CalculatorScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val view = LocalView.current
+    val hapticOn = hapticEnabled(context)
     var display by rememberSaveable { mutableStateOf("0") }
     var currentNumber by rememberSaveable { mutableStateOf("") }
     var previousNumber by rememberSaveable { mutableStateOf("") }
@@ -189,56 +197,56 @@ fun CalculatorScreen(onBack: () -> Unit) {
 
             // Scientific row
             CalcRow {
-                SciFuncButton("sin", Modifier.weight(1f)) { onScientific("sin") }
-                SciFuncButton("cos", Modifier.weight(1f)) { onScientific("cos") }
-                SciFuncButton("tan", Modifier.weight(1f)) { onScientific("tan") }
-                SciFuncButton("√", Modifier.weight(1f)) { onScientific("√") }
-                SciFuncButton("ln", Modifier.weight(1f)) { onScientific("ln") }
+                SciFuncButton("sin", Modifier.weight(1f), view, hapticOn) { onScientific("sin") }
+                SciFuncButton("cos", Modifier.weight(1f), view, hapticOn) { onScientific("cos") }
+                SciFuncButton("tan", Modifier.weight(1f), view, hapticOn) { onScientific("tan") }
+                SciFuncButton("√", Modifier.weight(1f), view, hapticOn) { onScientific("√") }
+                SciFuncButton("ln", Modifier.weight(1f), view, hapticOn) { onScientific("ln") }
             }
             Spacer(modifier = Modifier.height(4.dp))
             CalcRow {
-                SciFuncButton("x²", Modifier.weight(1f)) { onScientific("x²") }
-                SciFuncButton("xⁿ", Modifier.weight(1f)) { onOperator("^") }
-                SciFuncButton("±", Modifier.weight(1f)) { onToggleSign() }
-                SciFuncButton("%", Modifier.weight(1f)) { onPercent() }
-                SciFuncButton("⌫", Modifier.weight(1f)) { onBackspace() }
+                SciFuncButton("x²", Modifier.weight(1f), view, hapticOn) { onScientific("x²") }
+                SciFuncButton("xⁿ", Modifier.weight(1f), view, hapticOn) { onOperator("^") }
+                SciFuncButton("±", Modifier.weight(1f), view, hapticOn) { onToggleSign() }
+                SciFuncButton("%", Modifier.weight(1f), view, hapticOn) { onPercent() }
+                SciFuncButton("⌫", Modifier.weight(1f), view, hapticOn) { onBackspace() }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Main keypad
             CalcRow {
-                CalcButton("C", Modifier.weight(1f), isAccent = true) { onClear() }
-                CalcButton("(", Modifier.weight(1f)) { onNumber("(") }
-                CalcButton(")", Modifier.weight(1f)) { onNumber(")") }
-                CalcOperatorButton("÷", Modifier.weight(1f)) { onOperator("÷") }
+                CalcButton("C", Modifier.weight(1f), isAccent = true, view = view, hapticOn = hapticOn) { onClear() }
+                CalcButton("(", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("(") }
+                CalcButton(")", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber(")") }
+                CalcOperatorButton("÷", Modifier.weight(1f), view, hapticOn) { onOperator("÷") }
             }
             Spacer(modifier = Modifier.height(4.dp))
             CalcRow {
-                CalcButton("7", Modifier.weight(1f)) { onNumber("7") }
-                CalcButton("8", Modifier.weight(1f)) { onNumber("8") }
-                CalcButton("9", Modifier.weight(1f)) { onNumber("9") }
-                CalcOperatorButton("×", Modifier.weight(1f)) { onOperator("×") }
+                CalcButton("7", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("7") }
+                CalcButton("8", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("8") }
+                CalcButton("9", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("9") }
+                CalcOperatorButton("×", Modifier.weight(1f), view, hapticOn) { onOperator("×") }
             }
             Spacer(modifier = Modifier.height(4.dp))
             CalcRow {
-                CalcButton("4", Modifier.weight(1f)) { onNumber("4") }
-                CalcButton("5", Modifier.weight(1f)) { onNumber("5") }
-                CalcButton("6", Modifier.weight(1f)) { onNumber("6") }
-                CalcOperatorButton("-", Modifier.weight(1f)) { onOperator("-") }
+                CalcButton("4", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("4") }
+                CalcButton("5", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("5") }
+                CalcButton("6", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("6") }
+                CalcOperatorButton("-", Modifier.weight(1f), view, hapticOn) { onOperator("-") }
             }
             Spacer(modifier = Modifier.height(4.dp))
             CalcRow {
-                CalcButton("1", Modifier.weight(1f)) { onNumber("1") }
-                CalcButton("2", Modifier.weight(1f)) { onNumber("2") }
-                CalcButton("3", Modifier.weight(1f)) { onNumber("3") }
-                CalcOperatorButton("+", Modifier.weight(1f)) { onOperator("+") }
+                CalcButton("1", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("1") }
+                CalcButton("2", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("2") }
+                CalcButton("3", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber("3") }
+                CalcOperatorButton("+", Modifier.weight(1f), view, hapticOn) { onOperator("+") }
             }
             Spacer(modifier = Modifier.height(4.dp))
             CalcRow {
-                CalcButton("0", Modifier.weight(2f)) { onNumber("0") }
-                CalcButton(".", Modifier.weight(1f)) { onNumber(".") }
-                CalcEqualsButton("=", Modifier.weight(1f)) { onEquals() }
+                CalcButton("0", Modifier.weight(2f), view = view, hapticOn = hapticOn) { onNumber("0") }
+                CalcButton(".", Modifier.weight(1f), view = view, hapticOn = hapticOn) { onNumber(".") }
+                CalcEqualsButton("=", Modifier.weight(1f), view, hapticOn) { onEquals() }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -260,10 +268,15 @@ private fun CalcButton(
     text: String,
     modifier: Modifier = Modifier,
     isAccent: Boolean = false,
+    view: View? = null,
+    hapticOn: Boolean = false,
     onClick: () -> Unit,
 ) {
     FilledTonalButton(
-        onClick = onClick,
+        onClick = {
+            if (hapticOn) view?.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            onClick()
+        },
         modifier = modifier.height(64.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.filledTonalButtonColors(
@@ -287,9 +300,12 @@ private fun CalcButton(
 }
 
 @Composable
-private fun CalcOperatorButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun CalcOperatorButton(text: String, modifier: Modifier = Modifier, view: View? = null, hapticOn: Boolean = false, onClick: () -> Unit) {
     FilledTonalButton(
-        onClick = onClick,
+        onClick = {
+            if (hapticOn) view?.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            onClick()
+        },
         modifier = modifier.height(64.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.filledTonalButtonColors(
@@ -305,9 +321,12 @@ private fun CalcOperatorButton(text: String, modifier: Modifier = Modifier, onCl
 }
 
 @Composable
-private fun CalcEqualsButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun CalcEqualsButton(text: String, modifier: Modifier = Modifier, view: View? = null, hapticOn: Boolean = false, onClick: () -> Unit) {
     Button(
-        onClick = onClick,
+        onClick = {
+            if (hapticOn) view?.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            onClick()
+        },
         modifier = modifier.height(64.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
@@ -323,9 +342,12 @@ private fun CalcEqualsButton(text: String, modifier: Modifier = Modifier, onClic
 }
 
 @Composable
-private fun SciFuncButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun SciFuncButton(text: String, modifier: Modifier = Modifier, view: View? = null, hapticOn: Boolean = false, onClick: () -> Unit) {
     FilledTonalButton(
-        onClick = onClick,
+        onClick = {
+            if (hapticOn) view?.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            onClick()
+        },
         modifier = modifier.height(44.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.filledTonalButtonColors(

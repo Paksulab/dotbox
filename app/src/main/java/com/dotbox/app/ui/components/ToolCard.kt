@@ -1,15 +1,17 @@
 package com.dotbox.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,8 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,14 +33,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dotbox.app.data.model.ToolId
 import com.dotbox.app.ui.theme.NothingRed
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -52,8 +58,6 @@ fun ToolCard(
     modifier: Modifier = Modifier,
     isEditMode: Boolean = false,
     onLongClick: (() -> Unit)? = null,
-    onMoveUp: (() -> Unit)? = null,
-    onMoveDown: (() -> Unit)? = null,
 ) {
     val favoriteColor by animateColorAsState(
         targetValue = if (isFavorite) NothingRed else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
@@ -61,21 +65,49 @@ fun ToolCard(
         label = "favoriteColor",
     )
 
+    // Press micro-interaction: scale down on tap, spring back
+    val pressScale = remember { Animatable(1f) }
+    val scope = rememberCoroutineScope()
+
+    // Website-matching gradient: 160° from cardGray(0.95) to darkGray(0.95)
+    val cardGradient = Brush.linearGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+        ),
+        start = Offset(0f, 0f),
+        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
+    )
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1f)
+            .graphicsLayer {
+                scaleX = pressScale.value
+                scaleY = pressScale.value
+                // Website-matching shadow: 0 12px 34px rgba(0,0,0,0.35)
+                shadowElevation = 12f
+                shape = RoundedCornerShape(20.dp)
+                clip = true
+            }
             .clip(RoundedCornerShape(20.dp))
             .combinedClickable(
-                onClick = onClick,
+                onClick = {
+                    scope.launch {
+                        pressScale.animateTo(0.94f, tween(60))
+                        pressScale.animateTo(1f, spring(dampingRatio = 0.4f, stiffness = 400f))
+                    }
+                    onClick()
+                },
                 onLongClick = onLongClick,
             ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = tool.category.accentColor.copy(alpha = 0.08f),
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.01f),
         ),
         border = BorderStroke(
-            width = if (isEditMode) 2.dp else 1.dp,
+            width = 1.dp,
             color = if (isEditMode) {
                 MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
             } else {
@@ -83,7 +115,13 @@ fun ToolCard(
             },
         ),
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(cardGradient)
+                // Category tint layer on top of gradient
+                .background(tool.category.accentColor.copy(alpha = 0.06f)),
+        ) {
             if (isEditMode) {
                 // Edit mode: remove button (top-right)
                 IconButton(
@@ -102,42 +140,6 @@ fun ToolCard(
                         tint = NothingRed,
                         modifier = Modifier.size(18.dp),
                     )
-                }
-
-                // Edit mode: reorder arrows (bottom)
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    if (onMoveUp != null) {
-                        IconButton(
-                            onClick = onMoveUp,
-                            modifier = Modifier.size(32.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.KeyboardArrowUp,
-                                contentDescription = "Move up",
-                                tint = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    }
-                    if (onMoveDown != null) {
-                        IconButton(
-                            onClick = onMoveDown,
-                            modifier = Modifier.size(32.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.KeyboardArrowDown,
-                                contentDescription = "Move down",
-                                tint = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    }
                 }
             } else {
                 // Normal mode: favourite heart button (top-right)

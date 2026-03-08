@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "favorites")
@@ -41,4 +42,11 @@ interface FavoriteDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE toolId = :toolId)")
     fun isFavorite(toolId: String): Flow<Boolean>
+
+    @Transaction
+    suspend fun updateAllOrders(orders: List<Pair<String, Int>>) {
+        orders.forEach { (toolId, orderIndex) ->
+            updateOrder(toolId, orderIndex)
+        }
+    }
 }

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dotBox - 57 Tools in One App</title>
+    <meta name="description" content="dotBox is a minimalist Android toolkit with 57+ utility tools. Calculators, converters, timers, fitness tools, and more.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #0A0A0A;
+            --dark-gray: #141414;
+            --card-gray: #1A1A1A;
+            --border-gray: #2A2A2A;
+            --medium-gray: #3A3A3A;
+            --light-gray: #8A8A8A;
+            --off-white: #E0E0E0;
+            --white: #F5F5F5;
+            --red: #D32F2F;
+            --red-light: #EF5350;
+        }
+
+        body {
+            background-color: var(--black);
+            color: var(--white);
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .nav-logo svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-logo span {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--light-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 400;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--white);
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 6rem 2rem 4rem;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(211, 47, 47, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-icon {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(3rem, 7vw, 5rem);
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+
+        .hero h1 .dot {
+            color: var(--red);
+        }
+
+        .hero .tagline {
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            color: var(--light-gray);
+            font-weight: 300;
+            margin-bottom: 0.75rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero .sub-tagline {
+            font-size: 0.95rem;
+            color: var(--medium-gray);
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 2rem;
+            background: var(--white);
+            color: var(--black);
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--off-white);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 2rem;
+            background: transparent;
+            color: var(--white);
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-gray);
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--medium-gray);
+            background: var(--card-gray);
+        }
+
+        /* Version badge */
+        .version-badge {
+            display: inline-block;
+            padding: 0.3rem 0.75rem;
+            background: var(--card-gray);
+            border: 1px solid var(--border-gray);
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--light-gray);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        /* Stats strip */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border-gray);
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .stat-number .accent {
+            color: var(--red);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--light-gray);
+            margin-top: 0.25rem;
+        }
+
+        /* Categories section */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+
+        .section-subtitle {
+            color: var(--light-gray);
+            font-size: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .category-card {
+            background: var(--card-gray);
+            border: 1px solid var(--border-gray);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .category-card:hover {
+            border-color: var(--medium-gray);
+            transform: translateY(-2px);
+        }
+
+        .category-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+        }
+
+        .category-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-desc {
+            font-size: 0.85rem;
+            color: var(--light-gray);
+            line-height: 1.5;
+        }
+
+        .category-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--medium-gray);
+            margin-top: 0.75rem;
+        }
+
+        /* Features section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--dark-gray);
+            border: 1px solid var(--border-gray);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            color: var(--light-gray);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-gray);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--light-gray);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--white);
+        }
+
+        .footer-copy {
+            font-size: 0.8rem;
+            color: var(--medium-gray);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .stats {
+                gap: 2rem;
+                flex-wrap: wrap;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .section {
+                padding: 3rem 1.5rem;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-links a:not(:last-child) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="/" class="nav-logo">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="25" cy="25" r="8" fill="#F5F5F5"/>
+                <circle cx="50" cy="25" r="8" fill="#F5F5F5"/>
+                <circle cx="75" cy="25" r="8" fill="#D32F2F"/>
+                <circle cx="25" cy="50" r="8" fill="#F5F5F5"/>
+                <circle cx="50" cy="50" r="10" fill="#D32F2F"/>
+                <circle cx="75" cy="50" r="8" fill="#F5F5F5"/>
+                <circle cx="25" cy="75" r="8" fill="#D32F2F"/>
+                <circle cx="50" cy="75" r="8" fill="#F5F5F5"/>
+                <circle cx="75" cy="75" r="8" fill="#F5F5F5"/>
+            </svg>
+            <span>dotBox</span>
+        </a>
+        <div class="nav-links">
+            <a href="#tools">Tools</a>
+            <a href="#features">Features</a>
+            <a href="privacy.html">Privacy</a>
+            <a href="https://github.com/Paksulab/dotbox" class="btn-secondary" style="padding: 0.5rem 1.25rem; font-size: 0.8rem;">GitHub</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="version-badge">v1.0.0</div>
+        <svg class="hero-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="25" cy="25" r="8" fill="#F5F5F5"/>
+            <circle cx="50" cy="25" r="8" fill="#F5F5F5"/>
+            <circle cx="75" cy="25" r="8" fill="#D32F2F"/>
+            <circle cx="25" cy="50" r="8" fill="#F5F5F5"/>
+            <circle cx="50" cy="50" r="10" fill="#D32F2F"/>
+            <circle cx="75" cy="50" r="8" fill="#F5F5F5"/>
+            <circle cx="25" cy="75" r="8" fill="#D32F2F"/>
+            <circle cx="50" cy="75" r="8" fill="#F5F5F5"/>
+            <circle cx="75" cy="75" r="8" fill="#F5F5F5"/>
+        </svg>
+        <h1>dot<span class="dot">Box</span></h1>
+        <p class="tagline">57 tools. One app. Zero clutter.</p>
+        <p class="sub-tagline">A minimalist Android toolkit for everything you need.</p>
+        <div class="hero-cta">
+            <a href="#" class="btn-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.61 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/></svg>
+                Coming Soon
+            </a>
+            <a href="https://github.com/Paksulab/dotbox" class="btn-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21V19.21C6.73,19.82 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26V21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z"/></svg>
+                Source Code
+            </a>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats">
+        <div class="stat">
+            <div class="stat-number">57<span class="accent">+</span></div>
+            <div class="stat-label">Built-in tools</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">8</div>
+            <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Ads</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">100<span class="accent">%</span></div>
+            <div class="stat-label">Offline capable</div>
+        </div>
+    </section>
+
+    <!-- Tool Categories -->
+    <section class="section" id="tools">
+        <h2 class="section-title">Every tool you need</h2>
+        <p class="section-subtitle">Organized into 8 categories. No subscriptions, no tracking.</p>
+
+        <div class="categories-grid">
+            <div class="category-card">
+                <div class="category-dot" style="background: #E0E0E0;"></div>
+                <h3 class="category-name">Utility</h3>
+                <p class="category-desc">Flashlight, compass, level, ruler, QR scanner, sound meter, and more everyday essentials.</p>
+                <div class="category-count">12 tools</div>
+            </div>
+            <div class="category-card">
+                <div class="category-dot" style="background: #4DD0E1;"></div>
+                <h3 class="category-name">Calculators</h3>
+                <p class="category-desc">Tip calculator, percentage, loan, aspect ratio, age calculator, and date math.</p>
+                <div class="category-count">9 tools</div>
+            </div>
+            <div class="category-card">
+                <div class="category-dot" style="background: #D32F2F;"></div>
+                <h3 class="category-name">Measurement</h3>
+                <p class="category-desc">Stopwatch, countdown, Pomodoro timer, split timer, and workout timer.</p>
+                <div class="category-count">5 tools</div>
+            </div>
+            <div class="category-card">
+                <div class="category-dot" style="background: #78909C;"></div>
+                <h3 class="category-name">Converters</h3>
+                <p class="category-desc">Unit converter, currency, cooking measures, time zones, and number bases.</p>
+                <div class="category-count">5 tools</div>
+            </div>
+            <div class="category-card">
+                <div class="category-dot" style="background: #66BB6A;"></div>
+                <h3 class="category-name">Generators</h3>
+                <p class="category-desc">Random numbers, dice, coin flip, password generator, lorem ipsum, and color palette.</p>
+                <div class="category-count">6 tools</div>
+            </div>
+            <div class="category-card">
+                <div class="category-dot" style="background: #FFB74D;"></div>
+                <h3 class="category-name">Scanners</h3>
+                <p class="category-desc">QR code scanner, QR generator, and document scanner powered by ML Kit.</p>
+                <div class="category-count">3 tools</div>
+            </div>
+            <div class="category-card">
+                <div class="category-dot" style="background: #EF9A9A;"></div>
+                <h3 class="category-name">Medical</h3>
+                <p class="category-desc">BMI calculator, dose calculator, IV drip rate, ideal body weight, and BAC estimator.</p>
+                <div class="category-count">5 tools</div>
+            </div>
+            <div class="category-card">
+                <div class="category-dot" style="background: #FF7043;"></div>
+                <h3 class="category-name">Fitness</h3>
+                <p class="category-desc">One rep max, heart rate zones, body fat percentage, calorie estimator, and water intake.</p>
+                <div class="category-count">5 tools</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features">
+        <h2 class="section-title">Built different</h2>
+        <p class="section-subtitle">Designed with intention. No bloat, no nonsense.</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">&#9899;</div>
+                <h3 class="feature-title">Dark by default</h3>
+                <p class="feature-desc">A Nothing-inspired monochrome design that's easy on the eyes. Clean, minimal, intentional.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#9733;</div>
+                <h3 class="feature-title">Drag-to-reorder favorites</h3>
+                <p class="feature-desc">Pin your most-used tools to the top and reorder them with a long press. Your workflow, your way.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128274;</div>
+                <h3 class="feature-title">Privacy first</h3>
+                <p class="feature-desc">No accounts, no tracking, no analytics. Everything runs locally on your device. Your data stays yours.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#9889;</div>
+                <h3 class="feature-title">Instant access</h3>
+                <p class="feature-desc">Home screen widget for quick tool launch. Category chips with smart filtering. Search that actually works.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128241;</div>
+                <h3 class="feature-title">Tablet-ready</h3>
+                <p class="feature-desc">Adaptive two-pane layout on tablets and foldables. The right tool at the right size, always.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#127760;</div>
+                <h3 class="feature-title">Works offline</h3>
+                <p class="feature-desc">Almost every tool works without an internet connection. Currency converter is the only exception.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="https://github.com/Paksulab/dotbox">GitHub</a>
+            <a href="mailto:dotbox@example.com">Contact</a>
+        </div>
+        <p class="footer-copy">&copy; 2025 dotBox. Built with Jetpack Compose.</p>
+    </footer>
+
+</body>
+</html>

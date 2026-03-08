@@ -25,6 +25,7 @@ val AccentGenerate = Color(0xFF66BB6A)   // Muted green for generators
 val AccentScan = Color(0xFFFFB74D)       // Warm amber for scanners
 val AccentCalculator = Color(0xFF4DD0E1) // Cyan for calculators
 val AccentMedical = Color(0xFFEF9A9A)   // Soft rose for medical
+val AccentFitness = Color(0xFFFF7043)   // Warm orange for fitness
 
 // Material 3 dark color scheme mapped to Nothing aesthetic
 val DarkPrimary = NothingWhite

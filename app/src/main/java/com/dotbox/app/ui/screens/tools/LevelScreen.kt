@@ -1,10 +1,14 @@
 package com.dotbox.app.ui.screens.tools
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.view.HapticFeedbackConstants
+import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -16,17 +20,27 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,8 +48,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import com.dotbox.app.ui.components.ToolScreenScaffold
+import com.dotbox.app.ui.screens.settings.hapticEnabled
 import com.dotbox.app.ui.theme.JetBrainsMono
 import com.dotbox.app.ui.theme.NothingRed
 import kotlin.math.abs
@@ -43,16 +59,19 @@ import kotlin.math.abs
 @Composable
 fun LevelScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val view = LocalView.current
+    val hapticOn = hapticEnabled(context)
+    var isFrozen by rememberSaveable { mutableStateOf(false) }
     var pitch by remember { mutableFloatStateOf(0f) }
     var roll by remember { mutableFloatStateOf(0f) }
 
     val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(isFrozen) {
         val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
-                // Low-pass filter for smooth values
+                if (isFrozen) return
                 val alpha = 0.15f
                 pitch = pitch + alpha * (event.values[1] - pitch)
                 roll = roll + alpha * (event.values[0] - roll)
@@ -74,6 +93,15 @@ fun LevelScreen(onBack: () -> Unit) {
     val rollDegrees = (roll / SensorManager.GRAVITY_EARTH * 90f).coerceIn(-90f, 90f)
 
     val isLevel = abs(pitchDegrees) < 1.5f && abs(rollDegrees) < 1.5f
+
+    // Haptic feedback when device becomes level
+    var wasLevel by remember { mutableStateOf(false) }
+    LaunchedEffect(isLevel) {
+        if (hapticOn && isLevel && !wasLevel) {
+            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+        }
+        wasLevel = isLevel
+    }
 
     val animatedPitch by animateFloatAsState(
         targetValue = pitchDegrees,
@@ -135,12 +163,47 @@ fun LevelScreen(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = if (isLevel) "LEVEL" else "NOT LEVEL",
+                text = if (isFrozen) "LOCKED" else if (isLevel) "LEVEL" else "NOT LEVEL",
                 style = MaterialTheme.typography.titleMedium,
-                color = bubbleColor,
+                color = if (isFrozen) NothingRed else bubbleColor,
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Copy reading & Freeze/lock buttons
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                IconButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(
+                            ClipData.newPlainText("Level", "Pitch: %.1f° / Roll: %.1f°".format(pitchDegrees, rollDegrees)),
+                        )
+                        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "Copy reading",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                IconButton(onClick = { isFrozen = !isFrozen }) {
+                    Icon(
+                        imageVector = if (isFrozen) Icons.Default.Lock else Icons.Default.LockOpen,
+                        contentDescription = if (isFrozen) "Unlock" else "Lock",
+                        tint = if (isFrozen) NothingRed else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // 2D bubble level
             Box(

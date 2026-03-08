@@ -190,8 +190,8 @@ fun TipCalculatorScreen(onBack: () -> Unit) {
             Slider(
                 value = splitCount.toFloat(),
                 onValueChange = { splitCount = it.toInt() },
-                valueRange = 1f..20f,
-                steps = 18,
+                valueRange = 1f..10f,
+                steps = 8,
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.tertiary,
@@ -259,12 +259,23 @@ fun TipCalculatorScreen(onBack: () -> Unit) {
                                 Slider(
                                     value = share,
                                     onValueChange = { newVal ->
-                                        // Redistribute remaining % equally among others
                                         val clamped = newVal.coerceIn(0f, 100f)
+                                        val othersSum = customShares.indices
+                                            .filter { it != index }
+                                            .sumOf { customShares[it].toDouble() }.toFloat()
                                         val remaining = 100f - clamped
-                                        val otherCount = splitCount - 1
-                                        if (otherCount > 0) {
-                                            val otherShare = remaining / otherCount
+
+                                        if (othersSum > 0.01f) {
+                                            // Proportional: preserve ratios between others
+                                            val scale = remaining / othersSum
+                                            for (i in customShares.indices) {
+                                                customShares[i] = if (i == index) clamped
+                                                else (customShares[i] * scale).coerceIn(0f, 100f)
+                                            }
+                                        } else {
+                                            // Fallback: others are all zero, split equally
+                                            val otherCount = splitCount - 1
+                                            val otherShare = if (otherCount > 0) remaining / otherCount else 0f
                                             for (i in customShares.indices) {
                                                 customShares[i] = if (i == index) clamped else otherShare
                                             }

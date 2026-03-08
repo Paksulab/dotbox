@@ -43,23 +43,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.dotbox.app.data.preferences.AppPreferences
 import com.dotbox.app.ui.components.DotPattern
 import com.dotbox.app.ui.theme.JetBrainsMono
 import kotlinx.coroutines.launch
 
-private const val PREFS_NAME = "dotbox_settings"
-private const val KEY_ONBOARDING = "has_seen_onboarding"
 private const val PAGE_COUNT = 3
 
 fun hasSeenOnboarding(context: Context): Boolean {
-    return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        .getBoolean(KEY_ONBOARDING, false)
+    return AppPreferences.get(context).getBoolean(AppPreferences.KEY_ONBOARDING, false)
 }
 
 private fun markOnboardingComplete(context: Context) {
-    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        .edit()
-        .putBoolean(KEY_ONBOARDING, true)
+    AppPreferences.get(context).edit()
+        .putBoolean(AppPreferences.KEY_ONBOARDING, true)
         .apply()
 }
 
@@ -117,13 +114,13 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                         icon = Icons.Outlined.RocketLaunch,
                         title = "Welcome to dotBox",
                         subtitle = "Your all-in-one utility toolkit",
-                        description = "51 powerful tools in 7 categories, designed for everyday use.",
+                        description = "55 powerful tools in 8 categories, designed for everyday use.",
                     )
                     1 -> OnboardingPage(
                         icon = Icons.Outlined.Apps,
                         title = "Tools for Everything",
                         subtitle = "Calculators, converters, sensors & more",
-                        description = "From unit conversion to QR scanning, compass to white noise — everything you need in one app.",
+                        description = "From unit conversion to QR scanning, compass to fitness tracking — everything you need in one app.",
                     )
                     2 -> OnboardingPage(
                         icon = Icons.Outlined.Tune,

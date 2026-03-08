@@ -14,6 +14,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
+import com.dotbox.app.data.preferences.AppPreferences
 import com.dotbox.app.ui.navigation.DotBoxNavGraph
 import com.dotbox.app.ui.navigation.Screen
 import com.dotbox.app.ui.screens.onboarding.hasSeenOnboarding
@@ -35,18 +36,16 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val prefs = remember {
-                getSharedPreferences("dotbox_settings", Context.MODE_PRIVATE)
-            }
+            val prefs = remember { AppPreferences.get(this@MainActivity) }
             val themeMode = remember {
-                mutableStateOf(prefs.getString("theme_mode", "dark") ?: "dark")
+                mutableStateOf(prefs.getString(AppPreferences.KEY_THEME, "dark") ?: "dark")
             }
 
             // React to SharedPreferences changes (fires immediately when Settings writes)
             DisposableEffect(prefs) {
                 val listener = SharedPreferences.OnSharedPreferenceChangeListener { sp, key ->
-                    if (key == "theme_mode") {
-                        themeMode.value = sp.getString("theme_mode", "dark") ?: "dark"
+                    if (key == AppPreferences.KEY_THEME) {
+                        themeMode.value = sp.getString(AppPreferences.KEY_THEME, "dark") ?: "dark"
                     }
                 }
                 prefs.registerOnSharedPreferenceChangeListener(listener)
@@ -62,7 +61,7 @@ class MainActivity : ComponentActivity() {
             DotBoxTheme(darkTheme = isDark) {
                 val windowSizeClass = calculateWindowSizeClass(this@MainActivity)
                 val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
-                val twoPaneEnabled = prefs.getBoolean("two_pane_layout", false)
+                val twoPaneEnabled = prefs.getBoolean(AppPreferences.KEY_TWO_PANE, false)
 
                 val navController = rememberNavController()
                 DotBoxNavGraph(

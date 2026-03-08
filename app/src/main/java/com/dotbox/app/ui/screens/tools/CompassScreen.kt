@@ -1,10 +1,14 @@
 package com.dotbox.app.ui.screens.tools
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.content.Context
+import android.view.HapticFeedbackConstants
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -31,13 +35,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,6 +59,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +67,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dotbox.app.ui.components.ToolScreenScaffold
+import com.dotbox.app.ui.screens.settings.hapticEnabled
 import com.dotbox.app.ui.theme.JetBrainsMono
 import com.dotbox.app.ui.theme.NothingRed
 import kotlin.math.cos
@@ -64,6 +76,8 @@ import kotlin.math.sin
 @Composable
 fun CompassScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val view = LocalView.current
+    val hapticOn = hapticEnabled(context)
     var azimuth by remember { mutableFloatStateOf(0f) }
     var sensorAccuracy by remember { mutableIntStateOf(SensorManager.SENSOR_STATUS_ACCURACY_HIGH) }
 
@@ -145,6 +159,15 @@ fun CompassScreen(onBack: () -> Unit) {
     }
     val needsCalibration = sensorAccuracy <= SensorManager.SENSOR_STATUS_ACCURACY_LOW
 
+    // Haptic feedback at cardinal directions
+    var lastCardinal by remember { mutableStateOf("") }
+    LaunchedEffect(direction) {
+        if (hapticOn && direction in listOf("N", "E", "S", "W") && direction != lastCardinal) {
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+        }
+        lastCardinal = direction
+    }
+
     val textMeasurer = rememberTextMeasurer()
     val onSurface = MaterialTheme.colorScheme.onSurface
     val outline = MaterialTheme.colorScheme.outline
@@ -192,11 +215,33 @@ fun CompassScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.displayMedium.copy(fontFamily = JetBrainsMono),
                 color = MaterialTheme.colorScheme.onBackground,
             )
-            Text(
-                text = direction,
-                style = MaterialTheme.typography.headlineMedium,
-                color = NothingRed,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = direction,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = NothingRed,
+                )
+                IconButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(
+                            ClipData.newPlainText("Compass", "Bearing: ${azimuth.toInt()}° $direction"),
+                        )
+                        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "Copy bearing",
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 

@@ -1,6 +1,14 @@
 package com.dotbox.app.ui.screens.tools
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -43,9 +52,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dotbox.app.ui.components.ToolScreenScaffold
+import com.dotbox.app.ui.screens.settings.animationsEnabled
 import com.dotbox.app.ui.theme.JetBrainsMono
 import com.dotbox.app.ui.theme.NothingRed
 import kotlinx.coroutines.delay
@@ -105,6 +120,8 @@ fun StopwatchScreen(onBack: () -> Unit) {
 
 @Composable
 private fun StopwatchTab() {
+    val context = LocalContext.current
+    val animEnabled = animationsEnabled(context)
     var isRunning by rememberSaveable { mutableStateOf(false) }
     var elapsedMillis by rememberSaveable { mutableLongStateOf(0L) }
     var startTime by rememberSaveable { mutableLongStateOf(0L) }
@@ -197,27 +214,32 @@ private fun StopwatchTab() {
                 itemsIndexed(laps) { index, lapTime ->
                     val lapNumber = laps.size - index
                     val lapDelta = if (index < laps.lastIndex) lapTime - laps[index + 1] else lapTime
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = if (animEnabled) slideInVertically(initialOffsetY = { -it }) + fadeIn() else fadeIn(snap()),
                     ) {
-                        Text(
-                            text = "Lap $lapNumber",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            text = formatTime(lapDelta),
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = JetBrainsMono),
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                        Text(
-                            text = formatTime(lapTime),
-                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = JetBrainsMono),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = "Lap $lapNumber",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = formatTime(lapDelta),
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = JetBrainsMono),
+                                color = MaterialTheme.colorScheme.onBackground,
+                            )
+                            Text(
+                                text = formatTime(lapTime),
+                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = JetBrainsMono),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                     if (index < laps.lastIndex) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
@@ -230,6 +252,8 @@ private fun StopwatchTab() {
 
 @Composable
 private fun TimerTab() {
+    val context = LocalContext.current
+    val animEnabled = animationsEnabled(context)
     var totalSeconds by rememberSaveable { mutableIntStateOf(0) }
     var remainingMillis by rememberSaveable { mutableLongStateOf(0L) }
     var isRunning by rememberSaveable { mutableStateOf(false) }
@@ -338,11 +362,52 @@ private fun TimerTab() {
             val displaySeconds = ((remainingMillis / 1000) % 60).toInt()
             val displayMs = ((remainingMillis % 1000) / 10).toInt()
 
-            Text(
-                text = "%02d:%02d.%02d".format(displayMinutes, displaySeconds, displayMs),
-                style = MaterialTheme.typography.displayLarge.copy(fontFamily = JetBrainsMono),
-                color = if (remainingMillis == 0L) NothingRed else MaterialTheme.colorScheme.onBackground,
-            )
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
+                val timerProgress = if (totalSeconds > 0) remainingMillis.toFloat() / (totalSeconds * 1000f) else 0f
+                val animatedTimerProgress by animateFloatAsState(
+                    targetValue = timerProgress,
+                    animationSpec = tween(100),
+                    label = "timerProgress",
+                )
+                val progressColor = MaterialTheme.colorScheme.tertiary
+                val bgColor = MaterialTheme.colorScheme.outline
+
+                Canvas(modifier = Modifier.size(200.dp)) {
+                    val strokeWidth = 12.dp.toPx()
+                    val arcSize = size.width - strokeWidth
+                    val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
+
+                    // Background arc
+                    drawArc(
+                        color = bgColor,
+                        startAngle = 135f,
+                        sweepAngle = 270f,
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = Size(arcSize, arcSize),
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                    )
+                    // Progress arc
+                    drawArc(
+                        color = progressColor,
+                        startAngle = 135f,
+                        sweepAngle = 270f * (if (animEnabled) animatedTimerProgress else timerProgress),
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = Size(arcSize, arcSize),
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                    )
+                }
+
+                // Time text inside the arc
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "%02d:%02d.%02d".format(displayMinutes, displaySeconds, displayMs),
+                        style = MaterialTheme.typography.displayLarge.copy(fontFamily = JetBrainsMono),
+                        color = if (remainingMillis == 0L) NothingRed else MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+            }
 
             if (remainingMillis == 0L) {
                 Spacer(modifier = Modifier.height(16.dp))

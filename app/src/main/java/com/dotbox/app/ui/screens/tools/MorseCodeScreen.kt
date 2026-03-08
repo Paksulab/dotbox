@@ -5,6 +5,10 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.media.AudioManager
 import android.media.ToneGenerator
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -123,6 +127,18 @@ fun MorseCodeScreen(onBack: () -> Unit) {
     var textInput by rememberSaveable { mutableStateOf("") }
     var morseInput by rememberSaveable { mutableStateOf("") }
     var isPlaying by rememberSaveable { mutableStateOf(false) }
+    var outputModeIndex by rememberSaveable { mutableIntStateOf(0) } // 0=Sound, 1=Vibrate, 2=Both
+    val outputModes = listOf("Sound", "Vibrate", "Both")
+
+    val vibrator = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            manager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+    }
 
     val morseOutput = remember(textInput) {
         if (textInput.isNotBlank()) textToMorse(textInput) else ""
@@ -142,17 +158,28 @@ fun MorseCodeScreen(onBack: () -> Unit) {
         clipboard.setPrimaryClip(ClipData.newPlainText("Morse Code", text))
     }
 
+    fun vibrateMs(ms: Long) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(ms)
+        }
+    }
+
     fun playMorse(morse: String) {
         if (morse.isBlank() || isPlaying) return
         isPlaying = true
+        val useSound = outputModeIndex == 0 || outputModeIndex == 2
+        val useVibrate = outputModeIndex == 1 || outputModeIndex == 2
         scope.launch {
             withContext(Dispatchers.Default) {
-                val toneGenerator = try {
-                    ToneGenerator(AudioManager.STREAM_MUSIC, 100)
-                } catch (e: Exception) {
-                    isPlaying = false
-                    return@withContext
-                }
+                val toneGenerator = if (useSound) {
+                    try {
+                        ToneGenerator(AudioManager.STREAM_MUSIC, 100)
+                    } catch (_: Exception) { null }
+                } else null
+
                 try {
                     val chars = morse.toCharArray()
                     var i = 0
@@ -160,17 +187,18 @@ fun MorseCodeScreen(onBack: () -> Unit) {
                         val ch = chars[i]
                         when {
                             ch == '·' || ch == '.' -> {
-                                toneGenerator.startTone(ToneGenerator.TONE_DTMF_0, 100)
+                                if (useSound) toneGenerator?.startTone(ToneGenerator.TONE_DTMF_0, 100)
+                                if (useVibrate) vibrateMs(100)
                                 delay(100)
                                 delay(100) // gap between symbols
                             }
                             ch == '−' || ch == '-' -> {
-                                toneGenerator.startTone(ToneGenerator.TONE_DTMF_0, 300)
+                                if (useSound) toneGenerator?.startTone(ToneGenerator.TONE_DTMF_0, 300)
+                                if (useVibrate) vibrateMs(300)
                                 delay(300)
                                 delay(100) // gap between symbols
                             }
                             ch == '/' -> {
-                                // Check if it's word separator (//) or letter separator (/)
                                 if (i + 1 < chars.size && chars[i + 1] == '/') {
                                     delay(700) // word gap
                                     i++ // skip second slash
@@ -185,7 +213,7 @@ fun MorseCodeScreen(onBack: () -> Unit) {
                         i++
                     }
                 } finally {
-                    toneGenerator.release()
+                    toneGenerator?.release()
                     isPlaying = false
                 }
             }
@@ -213,6 +241,24 @@ fun MorseCodeScreen(onBack: () -> Unit) {
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
                             selectedLabelColor = MaterialTheme.colorScheme.tertiary,
+                        ),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Output mode chips (Sound / Vibrate / Both)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                outputModes.forEachIndexed { idx, label ->
+                    FilterChip(
+                        selected = outputModeIndex == idx,
+                        onClick = { outputModeIndex = idx },
+                        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         ),
                     )
                 }
@@ -352,7 +398,7 @@ fun MorseCodeScreen(onBack: () -> Unit) {
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isPlaying) "Playing..." else "Play Audio",
+                            text = if (isPlaying) "Playing..." else "Play ${outputModes[outputModeIndex]}",
                             style = MaterialTheme.typography.labelMedium,
                         )
                     }

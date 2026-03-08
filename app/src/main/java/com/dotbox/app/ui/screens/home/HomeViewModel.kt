@@ -38,6 +38,13 @@ class HomeViewModel(private val repository: ToolsRepository) : ViewModel() {
     private val _isEditMode = MutableStateFlow(false)
     val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
 
+    // Drag-to-reorder state: local override during active drag
+    private val _dragList = MutableStateFlow<List<ToolId>?>(null)
+    val dragList: StateFlow<List<ToolId>?> = _dragList.asStateFlow()
+
+    private val _draggedIndex = MutableStateFlow<Int?>(null)
+    val draggedIndex: StateFlow<Int?> = _draggedIndex.asStateFlow()
+
     val uiState: StateFlow<HomeUiState> = combine(
         _searchQuery,
         _selectedCategory,
@@ -111,13 +118,40 @@ class HomeViewModel(private val repository: ToolsRepository) : ViewModel() {
     }
 
     fun exitEditMode() {
+        endDrag() // commit any in-progress drag
         _isEditMode.value = false
     }
 
-    fun reorderFavorites(fromIndex: Int, toIndex: Int) {
-        viewModelScope.launch {
-            repository.reorderFavorites(fromIndex, toIndex)
+    // ── Drag-to-reorder lifecycle ──────────────────────────────
+
+    fun startDrag(index: Int) {
+        _dragList.value = uiState.value.favoriteToolsOrdered.toList()
+        _draggedIndex.value = index
+    }
+
+    fun moveDragItem(fromIndex: Int, toIndex: Int) {
+        val current = _dragList.value?.toMutableList() ?: return
+        if (fromIndex !in current.indices || toIndex !in current.indices) return
+        val item = current.removeAt(fromIndex)
+        current.add(toIndex, item)
+        _dragList.value = current
+        _draggedIndex.value = toIndex
+    }
+
+    fun endDrag() {
+        val finalOrder = _dragList.value
+        _dragList.value = null
+        _draggedIndex.value = null
+        if (finalOrder != null) {
+            viewModelScope.launch {
+                repository.setFavoriteOrder(finalOrder)
+            }
         }
+    }
+
+    fun cancelDrag() {
+        _dragList.value = null
+        _draggedIndex.value = null
     }
 
     companion object {

@@ -76,8 +76,12 @@ import com.dotbox.app.ui.screens.tools.CookingConverterScreen
 import com.dotbox.app.ui.screens.tools.ClothingSizeScreen
 import com.dotbox.app.ui.screens.tools.MorseCodeScreen
 import com.dotbox.app.ui.screens.tools.FrequencyGeneratorScreen
-import com.dotbox.app.ui.screens.tools.WhiteNoiseScreen
 import com.dotbox.app.ui.screens.tools.WifiQRScreen
+import com.dotbox.app.ui.screens.tools.WorkoutTimerScreen
+import com.dotbox.app.ui.screens.tools.RepCounterScreen
+import com.dotbox.app.ui.screens.tools.OneRepMaxScreen
+import com.dotbox.app.ui.screens.tools.PaceCalculatorScreen
+import com.dotbox.app.ui.screens.tools.SplitTimerScreen
 import com.dotbox.app.ui.screens.tools.CameraColorPickerScreen
 
 private const val EMPTY_ROUTE = "two_pane_empty"
@@ -178,7 +182,6 @@ fun TwoPaneHomeScreen(
             composable(ToolId.COLOR_PICKER.route) { ColorPickerScreen(onBack = onBack) }
             composable(ToolId.TEXT_TOOLS.route) { TextToolsScreen(onBack = onBack) }
             composable(ToolId.FREQUENCY_GENERATOR.route) { FrequencyGeneratorScreen(onBack = onBack) }
-            composable(ToolId.WHITE_NOISE.route) { WhiteNoiseScreen(onBack = onBack) }
             composable(ToolId.WIFI_QR.route) { WifiQRScreen(onBack = onBack) }
             composable(ToolId.COLOR_FROM_CAMERA.route) { CameraColorPickerScreen(onBack = onBack) }
 
@@ -186,17 +189,24 @@ fun TwoPaneHomeScreen(
             composable(ToolId.QR_SCANNER.route) { QRScannerScreen(onBack = onBack) }
             composable(ToolId.DOCUMENT_SCANNER.route) { DocumentScannerScreen(onBack = onBack) }
 
-            // ── Medical ──
+            // ── Fitness ──
             composable(ToolId.BMI_CALCULATOR.route) { BMICalculatorScreen(onBack = onBack) }
             composable(ToolId.BMR_CALCULATOR.route) { BMRCalculatorScreen(onBack = onBack) }
             composable(ToolId.HEART_RATE_ZONES.route) { HeartRateZonesScreen(onBack = onBack) }
             composable(ToolId.BODY_FAT_CALCULATOR.route) { BodyFatCalculatorScreen(onBack = onBack) }
+            composable(ToolId.WATER_INTAKE.route) { WaterIntakeScreen(onBack = onBack) }
+            composable(ToolId.IDEAL_BODY_WEIGHT.route) { IdealBodyWeightScreen(onBack = onBack) }
+            composable(ToolId.WORKOUT_TIMER.route) { WorkoutTimerScreen(onBack = onBack) }
+            composable(ToolId.REP_COUNTER.route) { RepCounterScreen(onBack = onBack) }
+            composable(ToolId.ONE_REP_MAX.route) { OneRepMaxScreen(onBack = onBack) }
+            composable(ToolId.PACE_CALCULATOR.route) { PaceCalculatorScreen(onBack = onBack) }
+            composable(ToolId.SPLIT_TIMER.route) { SplitTimerScreen(onBack = onBack) }
+
+            // ── Medical ──
             composable(ToolId.BAC_CALCULATOR.route) { BACCalculatorScreen(onBack = onBack) }
             composable(ToolId.DUE_DATE_CALCULATOR.route) { DueDateCalculatorScreen(onBack = onBack) }
             composable(ToolId.DOSE_CALCULATOR.route) { DoseCalculatorScreen(onBack = onBack) }
             composable(ToolId.IV_DRIP_RATE.route) { IVDripRateScreen(onBack = onBack) }
-            composable(ToolId.WATER_INTAKE.route) { WaterIntakeScreen(onBack = onBack) }
-            composable(ToolId.IDEAL_BODY_WEIGHT.route) { IdealBodyWeightScreen(onBack = onBack) }
         }
     }
 }

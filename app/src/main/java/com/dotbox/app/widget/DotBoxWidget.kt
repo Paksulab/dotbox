@@ -29,12 +29,13 @@ import androidx.glance.unit.ColorProvider
 import androidx.compose.ui.graphics.Color
 import com.dotbox.app.MainActivity
 import com.dotbox.app.data.model.ToolId
+import com.dotbox.app.data.preferences.AppPreferences
 
 class DotBoxWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val prefs = context.getSharedPreferences("dotbox_settings", Context.MODE_PRIVATE)
-        val favoritesJson = prefs.getString("widget_favorites", "") ?: ""
+        val prefs = AppPreferences.get(context)
+        val favoritesJson = prefs.getString(AppPreferences.KEY_WIDGET_FAVORITES, "") ?: ""
         val favoriteNames = if (favoritesJson.isNotBlank()) {
             favoritesJson.split(",").take(4)
         } else {
